@@ -43,14 +43,14 @@
 1. **创建Conda环境（推荐）**
 
 ```bash
-conda create -n deimv2 python=3.11 -y
-conda activate deimv2
+conda create -n catch python=3.11 -y
+conda activate catch
 ```
 
 2. **克隆项目并安装依赖**
 
 ```bash
-cd "Container door handle catch"
+cd catch
 pip install -r requirements.txt
 ```
 
@@ -97,7 +97,7 @@ Container door handle catch/
 │   ├── dataset/            # 数据集配置
 │   ├── deim_dfine/         # 检测模型配置
 │   ├── deim_rtdetrv2/      # 替代检测模型配置
-│   └── deimv2/             # 替代检测模型配置
+│   └── catch/             # 替代检测模型配置
 ├── engine/                 # 核心引擎代码
 │   ├── backbone/           # 神经网络骨干（ResNet、HGNetv2等）
 │   ├── core/               # 核心模块（配置、工作空间管理）
@@ -130,7 +130,7 @@ Netv2-Large, HGNetv2-XLarge                                                     
 
 #### DINOv3骨干网络（用于L和X模型）
 
-如果使用DEIMv2-L或X模型，需要手动下载DINOv3-S和DINOv3-S+：
+如果使用catch-L或X模型，需要手动下载DINOv3-S和DINOv3-S+：
 
 1. 参考 [DINOv3官方仓库](https://github.com/facebookresearch/dinov3) 的说明     
 2. 下载以下权重文件：
@@ -139,7 +139,7 @@ Netv2-Large, HGNetv2-XLarge                                                     
 
 #### ViT-Tiny和ViT-Tiny+骨干网络（用于S和M模型）
 
-如果使用DEIMv2-S或M模型，需要下载蒸馏的ViT-Tiny权重：
+如果使用catch-S或M模型，需要下载蒸馏的ViT-Tiny权重：
 
 - [ViT-Tiny](https://drive.google.com/file/d/1YMTq_woOLjAcZnHSYNTsNg7f0ahj5LPs/v
 iew?usp=sharing)：`vitt_distill.pt`                                             - [ViT-Tiny+](https://drive.google.com/file/d/1COHfjzq5KfnEaXTluVgEOMdhpuVcG6Jt/
@@ -169,8 +169,8 @@ backbone:
 
 ### 预训练模型
 
-在模型配置文件 [configs/deim_dfine/](configs/deim_dfine/) 和 [configs/deimv2/](c
-onfigs/deimv2/) 中可以找到完整的模型配置。                                      
+在模型配置文件 [configs/deim_dfine/](configs/deim_dfine/) 和 [configs/catch/](c
+onfigs/catch/) 中可以找到完整的模型配置。                                      
 ---
 
 ## ⚙️ 配置说明
