@@ -50,8 +50,13 @@ conda activate catch
 2. **克隆项目并安装依赖**
 
 ```bash
-cd catch
+git clone git@github.com:facebookresearch/detectron2.git
+cd detectron2
+pip install -e .
+pip install git+https://github.com/cocodataset/panopticapi.git
+pip install git+https://github.com/mcordts/cityscapesScripts.git
 pip install -r requirements.txt
+
 ```
 
 > **注意**：Detectron2的安装可能需要一些时间。如果在Windows上安装遇到问题，请参 
