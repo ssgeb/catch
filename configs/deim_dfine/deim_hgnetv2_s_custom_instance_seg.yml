@@ -1,0 +1,20 @@
+__include__: [
+  './deim_hgnetv2_s_coco.yml',
+  '../dataset/custom_instance_segmentation.yml',
+  '../base/deimv2_seg.yml'
+]
+
+output_dir: ./outputs/deim_hgnetv2_s_custom_instance_seg
+
+DFINETransformer:
+  use_mask_head: True
+  mask_dim: 256
+  mask_feat_level: 0
+  mask_embed_layers: 3
+
+val_dataloader:
+  dataset:
+    transforms:
+      ops:
+        - {type: Resize, size: [640, 640]}
+        - {type: ConvertPILImage, dtype: 'float32', scale: True}

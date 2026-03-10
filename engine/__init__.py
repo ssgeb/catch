@@ -1,6 +1,4 @@
-"""
-Copyright (c) 2024 The DEIM Authors. All Rights Reserved.
-"""
+"""Engine module initialization"""
 
 # for register purpose
 from . import optim

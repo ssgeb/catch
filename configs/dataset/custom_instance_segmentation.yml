@@ -1,0 +1,46 @@
+task: detection
+
+evaluator:
+  type: Detectron2CocoEvaluator
+  iou_types: ['bbox', 'segm']
+
+num_classes: 6
+remap_mscoco_category: False
+
+train_dataloader:
+  type: DataLoader
+  dataset:
+    type: CocoDetection
+    # img_folder: /home/wml/xm/sam3/sam3_output3000/train/coco_dataset/images
+    # ann_file: /home/wml/xm/sam3/sam3_output3000/train/coco_dataset/train.json
+    img_folder: /home/wml/xm/biye/BSData/coco_dataset1/train 
+    ann_file: /home/wml/xm/biye/BSData/coco_dataset1/annotations/instances_train.json
+    return_masks: True
+    transforms:
+      type: Compose
+      ops: ~
+  shuffle: True
+  num_workers: 4
+  drop_last: True
+  pin_memory: True
+  collate_fn:
+    type: BatchImageCollateFunction
+
+val_dataloader:
+  type: DataLoader
+  dataset:
+    type: CocoDetection
+    # img_folder: /home/wml/xm/sam3/sam3_output3000/val/coco_dataset/images
+    # ann_file: /home/wml/xm/sam3/sam3_output3000/val/coco_dataset/val.json
+    img_folder: /home/wml/xm/biye/BSData/coco_dataset1/val
+    ann_file: /home/wml/xm/biye/BSData/coco_dataset1/annotations/instances_val.json
+    return_masks: False
+    transforms:
+      type: Compose
+      ops: ~
+  shuffle: False
+  num_workers: 4
+  drop_last: False
+  pin_memory: True
+  collate_fn:
+    type: BatchImageCollateFunction

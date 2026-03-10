@@ -148,6 +148,7 @@ class BatchImageCollateFunction(BaseCollateFunction):
             print("     ### Multi-scales@ {} ###        ".format(self.scales))
         self.print_info_flag = True
         self.print_copyblend_flag = True
+        self.print_mask_aug_flag = True
         # self.interpolation = interpolation
 
     def apply_mixup(self, images, targets):
@@ -161,6 +162,12 @@ class BatchImageCollateFunction(BaseCollateFunction):
         Returns:
             tuple: Updated images and targets
         """
+        if len(targets) > 0 and 'masks' in targets[0]:
+            if self.print_mask_aug_flag and (self.mixup_prob > 0 or self.copyblend_prob > 0):
+                print("     ### Masks detected: skip Mixup/CopyBlend in collate_fn ###")
+                self.print_mask_aug_flag = False
+            return images, targets
+
         # Log when Mixup is permanently disabled
         if self.epoch == self.mixup_epochs[-1] and self.print_info_flag:
             print(f"     ### Attention --- Mixup is closed after epoch@ {self.epoch} ###")
@@ -360,7 +367,13 @@ class BatchImageCollateFunction(BaseCollateFunction):
             images = F.interpolate(images, size=sz)
             if 'masks' in targets[0]:
                 for tg in targets:
-                    tg['masks'] = F.interpolate(tg['masks'], size=sz, mode='nearest')
-                raise NotImplementedError('')
+                    masks = tg['masks']
+                    mask_dtype = masks.dtype
+                    masks = F.interpolate(masks[:, None].float(), size=sz, mode='nearest')[:, 0]
+                    if mask_dtype == torch.bool:
+                        masks = masks > 0.5
+                    else:
+                        masks = masks.to(mask_dtype)
+                    tg['masks'] = masks
 
         return images, targets

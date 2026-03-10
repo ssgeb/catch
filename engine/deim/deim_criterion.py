@@ -16,6 +16,13 @@ import copy
 
 from .dfine_utils import bbox2distance
 from .box_ops import box_cxcywh_to_xyxy, box_iou, generalized_box_iou
+from .mask_utils import (
+    calculate_uncertainty,
+    dice_loss,
+    get_uncertain_point_coords_with_randomness,
+    point_sample,
+    sigmoid_ce_loss,
+)
 from ..misc.dist_utils import get_world_size, is_dist_available_and_initialized
 from ..core import register
 
@@ -39,6 +46,9 @@ class DEIMCriterion(nn.Module):
         share_matched_indices=False,
         mal_alpha=None,
         use_uni_set=True,
+        num_mask_points=4096,
+        oversample_ratio=3.0,
+        importance_sample_ratio=0.75,
         ):
         """Create the criterion.
         Parameters:
@@ -64,6 +74,9 @@ class DEIMCriterion(nn.Module):
         self.num_pos, self.num_neg = None, None
         self.mal_alpha = mal_alpha
         self.use_uni_set = use_uni_set
+        self.num_mask_points = num_mask_points
+        self.oversample_ratio = oversample_ratio
+        self.importance_sample_ratio = importance_sample_ratio
 
     def loss_labels_focal(self, outputs, targets, indices, num_boxes):
         assert 'pred_logits' in outputs
@@ -214,6 +227,48 @@ class DEIMCriterion(nn.Module):
 
         return losses
 
+    def loss_masks(self, outputs, targets, indices, num_boxes):
+        assert "pred_masks" in outputs
+
+        src_idx = self._get_src_permutation_idx(indices)
+        if src_idx[0].numel() == 0:
+            zero = outputs["pred_masks"].sum() * 0.0
+            return {"loss_mask": zero, "loss_dice": zero}
+
+        src_masks = outputs["pred_masks"][src_idx]
+        target_masks = torch.cat(
+            [t["masks"][j] for t, (_, j) in zip(targets, indices) if len(j) > 0],
+            dim=0,
+        ).to(device=src_masks.device, dtype=src_masks.dtype)
+
+        src_masks = src_masks[:, None]
+        target_masks = target_masks[:, None]
+
+        with torch.no_grad():
+            point_coords = get_uncertain_point_coords_with_randomness(
+                src_masks,
+                lambda logits: calculate_uncertainty(logits),
+                self.num_mask_points,
+                self.oversample_ratio,
+                self.importance_sample_ratio,
+            )
+            point_labels = point_sample(
+                target_masks,
+                point_coords,
+                align_corners=False,
+            ).squeeze(1)
+
+        point_logits = point_sample(
+            src_masks,
+            point_coords,
+            align_corners=False,
+        ).squeeze(1)
+
+        return {
+            "loss_mask": sigmoid_ce_loss(point_logits, point_labels, num_boxes),
+            "loss_dice": dice_loss(point_logits, point_labels, num_boxes),
+        }
+
     def _get_src_permutation_idx(self, indices):
         # permute predictions following indices
         batch_idx = torch.cat([torch.full_like(src, i) for i, (src, _) in enumerate(indices)])
@@ -259,9 +314,16 @@ class DEIMCriterion(nn.Module):
             'vfl': self.loss_labels_vfl,
             'mal': self.loss_labels_mal,
             'local': self.loss_local,
+            'masks': self.loss_masks,
         }
         assert loss in loss_map, f'do you really want to compute {loss} loss?'
         return loss_map[loss](outputs, targets, indices, num_boxes, **kwargs)
+
+    @staticmethod
+    def _supports_loss(loss, outputs, targets):
+        if loss != "masks":
+            return True
+        return "pred_masks" in outputs and all("masks" in target for target in targets)
 
     def forward(self, outputs, targets, epoch=0, **kwargs):
         """ This performs the loss computation.
@@ -271,6 +333,8 @@ class DEIMCriterion(nn.Module):
                       The expected keys in each dict depends on the losses applied, see each loss' doc
         """
         outputs_without_aux = {k: v for k, v in outputs.items() if 'aux' not in k}
+        if "masks" in self.losses and "pred_masks" not in outputs_without_aux:
+            raise KeyError("Mask loss requested, but model outputs do not contain `pred_masks`.")
 
         # Retrieve the matching between the outputs of the last layer and the targets
         indices = self.matcher(outputs_without_aux, targets, epoch=epoch)['indices']
@@ -310,6 +374,8 @@ class DEIMCriterion(nn.Module):
         # Compute all the requested losses, main loss
         losses = {}
         for loss in self.losses:
+            if not self._supports_loss(loss, outputs, targets):
+                continue
             use_uni_set = self.use_uni_set and (loss in ['boxes', 'local'])
             indices_in = indices_go if use_uni_set else indices
             num_boxes_in = num_boxes_go if use_uni_set else num_boxes
@@ -324,6 +390,8 @@ class DEIMCriterion(nn.Module):
                 if 'local' in self.losses:      # only work for local loss
                     aux_outputs['up'], aux_outputs['reg_scale'] = outputs['up'], outputs['reg_scale']
                 for loss in self.losses:
+                    if not self._supports_loss(loss, aux_outputs, targets):
+                        continue
                     use_uni_set = self.use_uni_set and (loss in ['boxes', 'local'])
                     indices_in = indices_go if use_uni_set else cached_indices[i]
                     num_boxes_in = num_boxes_go if use_uni_set else num_boxes
@@ -338,6 +406,8 @@ class DEIMCriterion(nn.Module):
         if 'pre_outputs' in outputs:
             aux_outputs = outputs['pre_outputs']
             for loss in self.losses:
+                if not self._supports_loss(loss, aux_outputs, targets):
+                    continue
                 use_uni_set = self.use_uni_set and (loss in ['boxes', 'local'])
                 indices_in = indices_go if use_uni_set else cached_indices[-1]
                 num_boxes_in = num_boxes_go if use_uni_set else num_boxes
@@ -363,6 +433,8 @@ class DEIMCriterion(nn.Module):
 
             for i, aux_outputs in enumerate(outputs['enc_aux_outputs']):
                 for loss in self.losses:
+                    if not self._supports_loss(loss, aux_outputs, enc_targets):
+                        continue
                     use_uni_set = self.use_uni_set and (loss == 'boxes')
                     indices_in = indices_go if use_uni_set else cached_indices_enc[i]
                     num_boxes_in = num_boxes_go if use_uni_set else num_boxes
@@ -386,6 +458,8 @@ class DEIMCriterion(nn.Module):
                     aux_outputs['is_dn'] = True
                     aux_outputs['up'], aux_outputs['reg_scale'] = outputs['up'], outputs['reg_scale']
                 for loss in self.losses:
+                    if not self._supports_loss(loss, aux_outputs, targets):
+                        continue
                     meta = self.get_loss_meta_info(loss, aux_outputs, targets, indices_dn)
                     l_dict = self.get_loss(loss, aux_outputs, targets, indices_dn, dn_num_boxes, **meta)
                     l_dict = {k: l_dict[k] * self.weight_dict[k] for k in l_dict if k in self.weight_dict}
@@ -396,6 +470,8 @@ class DEIMCriterion(nn.Module):
             if 'dn_pre_outputs' in outputs:
                 aux_outputs = outputs['dn_pre_outputs']
                 for loss in self.losses:
+                    if not self._supports_loss(loss, aux_outputs, targets):
+                        continue
                     meta = self.get_loss_meta_info(loss, aux_outputs, targets, indices_dn)
                     l_dict = self.get_loss(loss, aux_outputs, targets, indices_dn, dn_num_boxes, **meta)
                     l_dict = {k: l_dict[k] * self.weight_dict[k] for k in l_dict if k in self.weight_dict}

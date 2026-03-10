@@ -1,8 +1,11 @@
-torch==2.5.1
-torchvision==0.20.1
-faster-coco-eval>=1.6.7
+torch
+torchvision
+detectron2
+faster-coco-eval
 PyYAML
 tensorboard
 scipy
 calflops
 transformers
+opencv-python
+pillow

@@ -1,7 +1,4 @@
-"""
-Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
-Copyright(c) 2023 lyuwenyu. All Rights Reserved.
-"""
+"""Core engine configuration and registration module"""
 
 from .workspace import GLOBAL_CONFIG, register, create
 from .yaml_utils import *

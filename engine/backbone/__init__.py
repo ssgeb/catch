@@ -2,6 +2,7 @@
 Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
+import warnings
 
 from .common import (
     get_activation,
@@ -19,4 +20,10 @@ from .csp_darknet import CSPDarkNet, CSPPAN
 
 from .hgnetv2 import HGNetv2
 
-from .dinov3_adapter import *
+try:
+    from .dinov3_adapter import *
+except Exception as e:
+    warnings.warn(
+        f"Skip optional DINOv3 backbone import due to environment mismatch: {e}",
+        RuntimeWarning,
+    )

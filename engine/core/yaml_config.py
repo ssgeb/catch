@@ -1,7 +1,4 @@
-"""
-Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
-Copyright(c) 2023 lyuwenyu. All Rights Reserved.
-"""
+"""YAML configuration management module"""
 
 import torch
 import torch.nn as nn
@@ -97,12 +94,13 @@ class YAMLConfig(BaseConfig):
     @property
     def evaluator(self, ):
         if self._evaluator is None and 'evaluator' in self.yaml_cfg:
-            if self.yaml_cfg['evaluator']['type'] == 'CocoEvaluator':
+            evaluator_type = self.yaml_cfg['evaluator']['type']
+            if evaluator_type in {'CocoEvaluator', 'Detectron2CocoEvaluator'}:
                 from ..data import get_coco_api_from_dataset
                 base_ds = get_coco_api_from_dataset(self.val_dataloader.dataset)
                 self._evaluator = create('evaluator', self.global_cfg, coco_gt=base_ds)
             else:
-                raise NotImplementedError(f"{self.yaml_cfg['evaluator']['type']}")
+                raise NotImplementedError(f"{evaluator_type}")
         return super().evaluator
 
     @staticmethod

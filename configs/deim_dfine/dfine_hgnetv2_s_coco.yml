@@ -1,5 +1,5 @@
 __include__: [
-  '../dataset/coco_detection.yml',
+  '../dataset/custom_instance_segmentation.yml',
   '../runtime.yml',
   '../base/dataloader.yml',
   '../base/optimizer.yml',
@@ -58,4 +58,4 @@ train_dataloader:
   collate_fn:
     stop_epoch: 120
     ema_restart_decay: 0.9999
-    base_size_repeat: 20
+    base_size_repeat: ~

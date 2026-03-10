@@ -1,6 +1,4 @@
-"""
-Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
-"""
+"""Model information extraction utilities"""
 
 import os
 import sys

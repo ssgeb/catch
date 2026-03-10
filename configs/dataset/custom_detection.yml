@@ -4,38 +4,40 @@ evaluator:
   type: CocoEvaluator
   iou_types: ['bbox', ]
 
-num_classes: 777 # your dataset classes
+num_classes: 6
 remap_mscoco_category: False
 
-train_dataloader:
+train_dataloader: 
   type: DataLoader
-  dataset:
+  dataset: 
     type: CocoDetection
-    img_folder: /data/yourdataset/train
-    ann_file: /data/yourdataset/train/train.json
+    img_folder: /home/wml/xm/biye/sam3seg/1000tv1/labels/train/images
+    ann_file: /home/wml/xm/biye/sam3seg/1000tv1/labels/annotations/instances_train.json
     return_masks: False
     transforms:
       type: Compose
       ops: ~
   shuffle: True
   num_workers: 4
-  drop_last: True
+  drop_last: True 
+  pin_memory: True
   collate_fn:
     type: BatchImageCollateFunction
 
 
 val_dataloader:
   type: DataLoader
-  dataset:
+  dataset: 
     type: CocoDetection
-    img_folder: /data/yourdataset/val
-    ann_file: /data/yourdataset/val/val.json
+    img_folder: /home/wml/xm/biye/sam3seg/1000tv1/labels/val/images
+    ann_file: /home/wml/xm/biye/sam3seg/1000tv1/labels/annotations/instances_val.json
     return_masks: False
     transforms:
       type: Compose
-      ops: ~
+      ops: ~ 
   shuffle: False
   num_workers: 4
   drop_last: False
+  pin_memory: True
   collate_fn:
     type: BatchImageCollateFunction

@@ -11,6 +11,7 @@ from .coco_dataset import (
     mscoco_label2category,
 )
 from .coco_eval import CocoEvaluator
+from .d2_coco_eval import Detectron2CocoEvaluator
 from .coco_utils import get_coco_api_from_dataset
 from .voc_detection import VOCDetection
 from .voc_eval import VOCEvaluator

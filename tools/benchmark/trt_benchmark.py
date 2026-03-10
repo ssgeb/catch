@@ -1,6 +1,4 @@
-"""
-Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
-"""
+"""Tensor Runtime benchmark utilities"""
 
 import tensorrt as trt
 import pycuda.driver as cuda

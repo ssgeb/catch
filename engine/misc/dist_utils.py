@@ -17,9 +17,29 @@ import torch.nn as nn
 import torch.distributed
 import torch.backends.cudnn
 
+# Compatibility shim for transformers>=5 with torch==2.1.x.
+if (
+    hasattr(torch.utils, "_pytree")
+    and not hasattr(torch.utils._pytree, "register_pytree_node")
+    and hasattr(torch.utils._pytree, "_register_pytree_node")
+):
+    def _register_pytree_node_compat(typ, flatten_fn, unflatten_fn, **kwargs):
+        return torch.utils._pytree._register_pytree_node(
+            typ,
+            flatten_fn,
+            unflatten_fn,
+            to_dumpable_context=kwargs.get("to_dumpable_context", None),
+            from_dumpable_context=kwargs.get("from_dumpable_context", None),
+        )
+
+    torch.utils._pytree.register_pytree_node = _register_pytree_node_compat
+
 from torch.nn.parallel import DataParallel as DP
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+try:
+    from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+except Exception:
+    FSDP = None
 
 from torch.utils.data import DistributedSampler
 # from torch.utils.data.dataloader import DataLoader

@@ -6,7 +6,7 @@ postprocessor: PostProcessor
 
 use_focal_loss: True
 eval_spatial_size: [640, 640] # h w
-checkpoint_freq: 4    # save freq
+checkpoint_freq: 40    # save freq
 
 DEIM:
   backbone: HGNetv2
@@ -22,7 +22,7 @@ no_aug_epoch: 0
 
 HGNetv2:
   pretrained: True
-  local_model_dir: ../RT-DETR-main/D-FINE/weight/hgnetv2/
+  local_model_dir: ./RT-DETR-main/D-FINE/weight/hgnetv2/
 
 HybridEncoder:
   in_channels: [512, 1024, 2048]

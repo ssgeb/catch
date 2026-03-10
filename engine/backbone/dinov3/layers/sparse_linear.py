@@ -82,9 +82,12 @@ def update_24sparsity(root_module: nn.Module, enabled: bool) -> int:
         return module
 
     named_apply(maybe_apply_sparsity, root_module)
-    # Force re-compile everything
-    torch._dynamo.reset_code_caches()
-    from torch._inductor.cudagraph_trees import reset_cudagraph_trees
-
-    reset_cudagraph_trees()
+    # Best-effort cache reset for newer torch stacks.
+    if hasattr(torch, "_dynamo"):
+        torch._dynamo.reset_code_caches()
+    try:
+        from torch._inductor.cudagraph_trees import reset_cudagraph_trees
+        reset_cudagraph_trees()
+    except Exception:
+        pass
     return num_modified

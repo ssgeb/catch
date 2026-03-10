@@ -338,7 +338,8 @@ class TransformerDecoder(nn.Module):
                 reg_scale,
                 attn_mask=None,
                 memory_mask=None,
-                dn_meta=None):
+                dn_meta=None,
+                collect_queries=False):
         output = target
         output_detach = pred_corners_undetach = 0
         value = self.value_op(memory, None, None, memory_mask, spatial_shapes)
@@ -347,6 +348,7 @@ class TransformerDecoder(nn.Module):
         dec_out_logits = []
         dec_out_pred_corners = []
         dec_out_refs = []
+        dec_out_queries = [] if collect_queries else None
         if not hasattr(self, 'project'):
             project = weighting_function(self.reg_max, up, reg_scale)
         else:
@@ -384,6 +386,8 @@ class TransformerDecoder(nn.Module):
                 dec_out_bboxes.append(inter_ref_bbox)
                 dec_out_pred_corners.append(pred_corners)
                 dec_out_refs.append(ref_points_initial)
+                if collect_queries:
+                    dec_out_queries.append(output)
 
                 if not self.training:
                     break
@@ -393,7 +397,7 @@ class TransformerDecoder(nn.Module):
             output_detach = output.detach()
 
         return torch.stack(dec_out_bboxes), torch.stack(dec_out_logits), \
-               torch.stack(dec_out_pred_corners), torch.stack(dec_out_refs), pre_bboxes, pre_scores
+               torch.stack(dec_out_pred_corners), torch.stack(dec_out_refs), pre_bboxes, pre_scores, dec_out_queries
 
 
 @register()
@@ -427,6 +431,10 @@ class DFINETransformer(nn.Module):
                  reg_scale=4.,
                  layer_scale=1,
                  mlp_act='relu',
+                 use_mask_head=False,
+                 mask_dim=256,
+                 mask_feat_level=0,
+                 mask_embed_layers=3,
                  ):
         super().__init__()
         assert len(feat_channels) <= num_levels
@@ -447,11 +455,15 @@ class DFINETransformer(nn.Module):
         self.eval_spatial_size = eval_spatial_size
         self.aux_loss = aux_loss
         self.reg_max = reg_max
+        self.use_mask_head = use_mask_head
+        self.mask_dim = mask_dim
+        self.mask_feat_level = mask_feat_level
 
         assert query_select_method in ('default', 'one2many', 'agnostic'), ''
         assert cross_attn_method in ('default', 'discrete'), ''
         self.cross_attn_method = cross_attn_method
         self.query_select_method = query_select_method
+        assert 0 <= self.mask_feat_level < len(feat_channels), "mask_feat_level out of range."
 
         # backbone feature projection
         self._build_input_proj_layer(feat_channels)
@@ -505,6 +517,17 @@ class DFINETransformer(nn.Module):
             [MLP(hidden_dim, hidden_dim, 4 * (self.reg_max+1), 3, act=mlp_act) for _ in range(self.eval_idx + 1)]
           + [MLP(scaled_dim, scaled_dim, 4 * (self.reg_max+1), 3, act=mlp_act) for _ in range(num_layers - self.eval_idx - 1)])
         self.integral = Integral(self.reg_max)
+        if self.use_mask_head:
+            self.mask_feature_proj = nn.Sequential(OrderedDict([
+                ('conv', nn.Conv2d(feat_channels[self.mask_feat_level], mask_dim, kernel_size=1, bias=False)),
+                ('norm', nn.BatchNorm2d(mask_dim)),
+            ]))
+            mask_head_dims = [
+                hidden_dim if i <= self.eval_idx else scaled_dim for i in range(num_layers)
+            ]
+            self.dec_mask_head = nn.ModuleList(
+                [MLP(dim, dim, mask_dim, mask_embed_layers, act=mlp_act) for dim in mask_head_dims]
+            )
 
         # init encoder output anchors and valid_mask
         if self.eval_spatial_size:
@@ -547,6 +570,8 @@ class DFINETransformer(nn.Module):
         for m, in_channels in zip(self.input_proj, feat_channels):
             if in_channels != self.hidden_dim:
                 init.xavier_uniform_(m[0].weight)
+        if self.use_mask_head:
+            init.xavier_uniform_(self.mask_feature_proj[0].weight)
 
     def _build_input_proj_layer(self, feat_channels):
         self.input_proj = nn.ModuleList()
@@ -701,6 +726,10 @@ class DFINETransformer(nn.Module):
         return topk_memory, topk_logits, topk_anchors
 
     def forward(self, feats, targets=None):
+        mask_features = None
+        if self.use_mask_head:
+            mask_features = self.mask_feature_proj(feats[self.mask_feat_level])
+
         # input projection and embedding
         memory, spatial_shapes = self._get_encoder_input(feats)
 
@@ -722,7 +751,7 @@ class DFINETransformer(nn.Module):
             self._get_decoder_input(memory, spatial_shapes, denoising_logits, denoising_bbox_unact)
 
         # decoder
-        out_bboxes, out_logits, out_corners, out_refs, pre_bboxes, pre_logits = self.decoder(
+        out_bboxes, out_logits, out_corners, out_refs, pre_bboxes, pre_logits, out_queries = self.decoder(
             init_ref_contents,
             init_ref_points_unact,
             memory,
@@ -735,7 +764,8 @@ class DFINETransformer(nn.Module):
             self.up,
             self.reg_scale,
             attn_mask=attn_mask,
-            dn_meta=dn_meta)
+            dn_meta=dn_meta,
+            collect_queries=self.use_mask_head)
 
         if self.training and dn_meta is not None:
             # the output from the first decoder layer, only one
@@ -747,6 +777,18 @@ class DFINETransformer(nn.Module):
 
             dn_out_corners, out_corners = torch.split(out_corners, dn_meta['dn_num_split'], dim=2)
             dn_out_refs, out_refs = torch.split(out_refs, dn_meta['dn_num_split'], dim=2)
+            if self.use_mask_head:
+                dn_out_queries, out_queries_keep = [], []
+                for query in out_queries:
+                    dn_query, out_query = torch.split(query, dn_meta['dn_num_split'], dim=1)
+                    dn_out_queries.append(dn_query)
+                    out_queries_keep.append(out_query)
+                out_queries = out_queries_keep
+
+        if self.use_mask_head:
+            out_masks = self._predict_masks(out_queries, mask_features)
+            if self.training and dn_meta is not None:
+                dn_out_masks = self._predict_masks(dn_out_queries, mask_features)
 
 
         if self.training:
@@ -754,21 +796,31 @@ class DFINETransformer(nn.Module):
                    'ref_points': out_refs[-1], 'up': self.up, 'reg_scale': self.reg_scale}
         else:
             out = {'pred_logits': out_logits[-1], 'pred_boxes': out_bboxes[-1]}
+        if self.use_mask_head:
+            out['pred_masks'] = out_masks[-1]
 
         if self.training and self.aux_loss:
             out['aux_outputs'] = self._set_aux_loss2(out_logits[:-1], out_bboxes[:-1], out_corners[:-1], out_refs[:-1],
-                                                     out_corners[-1], out_logits[-1])
+                                                     out_corners[-1], out_logits[-1],
+                                                     out_masks[:-1] if self.use_mask_head else None)
             out['enc_aux_outputs'] = self._set_aux_loss(enc_topk_logits_list, enc_topk_bboxes_list)
             out['pre_outputs'] = {'pred_logits': pre_logits, 'pred_boxes': pre_bboxes}
             out['enc_meta'] = {'class_agnostic': self.query_select_method == 'agnostic'}
 
             if dn_meta is not None:
                 out['dn_outputs'] = self._set_aux_loss2(dn_out_logits, dn_out_bboxes, dn_out_corners, dn_out_refs,
-                                                        dn_out_corners[-1], dn_out_logits[-1])
+                                                        dn_out_corners[-1], dn_out_logits[-1],
+                                                        dn_out_masks if self.use_mask_head else None)
                 out['dn_pre_outputs'] = {'pred_logits': dn_pre_logits, 'pred_boxes': dn_pre_bboxes}
                 out['dn_meta'] = dn_meta
 
         return out
+
+    def _predict_masks(self, query_states, mask_features):
+        return [
+            torch.einsum("bqc,bchw->bqhw", self.dec_mask_head[i](query_state), mask_features.to(query_state.dtype))
+            for i, query_state in enumerate(query_states)
+        ]
 
 
     @torch.jit.unused
@@ -781,10 +833,21 @@ class DFINETransformer(nn.Module):
 
     @torch.jit.unused
     def _set_aux_loss2(self, outputs_class, outputs_coord, outputs_corners, outputs_ref,
-                       teacher_corners=None, teacher_logits=None):
+                       teacher_corners=None, teacher_logits=None, outputs_masks=None):
         # this is a workaround to make torchscript happy, as torchscript
         # doesn't support dictionary with non-homogeneous values, such
         # as a dict having both a Tensor and a list.
-        return [{'pred_logits': a, 'pred_boxes': b, 'pred_corners': c, 'ref_points': d,
-                     'teacher_corners': teacher_corners, 'teacher_logits': teacher_logits}
-                for a, b, c, d in zip(outputs_class, outputs_coord, outputs_corners, outputs_ref)]
+        aux_outputs = []
+        for i, (a, b, c, d) in enumerate(zip(outputs_class, outputs_coord, outputs_corners, outputs_ref)):
+            aux_output = {
+                'pred_logits': a,
+                'pred_boxes': b,
+                'pred_corners': c,
+                'ref_points': d,
+                'teacher_corners': teacher_corners,
+                'teacher_logits': teacher_logits,
+            }
+            if outputs_masks is not None:
+                aux_output['pred_masks'] = outputs_masks[i]
+            aux_outputs.append(aux_output)
+        return aux_outputs
