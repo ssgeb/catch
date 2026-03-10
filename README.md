@@ -1,580 +1,569 @@
-<h2 align="center">
-  Real-Time Object Detection Meets DINOv3
-</h2>
+# 集装箱门把手盖缺陷检测与分割系统
 
-<p align="center">
-    <a href="https://github.com/Intellindust-AI-Lab/DEIMv2/blob/master/LICENSE">
-        <img alt="license" src="https://img.shields.io/badge/LICENSE-Apache%202.0-blue">
-    </a>
-    <a href="https://arxiv.org/abs/2509.20787">
-        <img alt="arXiv" src="https://img.shields.io/badge/arXiv-2509.20787-red">
-    </a>
-   <a href="https://intellindust-ai-lab.github.io/projects/DEIMv2/">
-        <img alt="project webpage" src="https://img.shields.io/badge/Webpage-DEIMv2-purple">
-    </a>
-    <a href="https://github.com/Intellindust-AI-Lab/DEIMv2/pulls">
-        <img alt="prs" src="https://img.shields.io/github/issues-pr/Intellindust-AI-Lab/DEIMv2">
-    </a>
-    <a href="https://github.com/Intellindust-AI-Lab/DEIMv2/issues">
-        <img alt="issues" src="https://img.shields.io/github/issues/Intellindust-AI-Lab/DEIMv2?color=olive">
-    </a>
-    <a href="https://github.com/Intellindust-AI-Lab/DEIMv2">
-        <img alt="stars" src="https://img.shields.io/github/stars/Intellindust-AI-Lab/DEIMv2">
-    </a>
-    <a href="mailto:shenxi@intellindust.com">
-        <img alt="Contact Us" src="https://img.shields.io/badge/Contact-Email-yellow">
-    </a>
-</p>
+<div align="center">
 
-<p align="center">
-    DEIMv2 is an evolution of the DEIM framework while leveraging the rich features from DINOv3. Our method is designed with various model sizes, from an ultra-light version up to S, M, L, and X, to be adaptable for a wide range of scenarios. Across these variants, DEIMv2 achieves state-of-the-art performance, with the S-sized model notably surpassing 50 AP on the challenging COCO benchmark.
-</p>
+![Task](https://img.shields.io/badge/Task-Detection%20%26%20Segmentation-blue)
+![License](https://img.shields.io/badge/LICENSE-Apache%202.0-green)
+![Python](https://img.shields.io/badge/Python-3.8+-yellow)
+![Framework](https://img.shields.io/badge/Framework-Detectron2-brightgreen)
+
+**集装箱门把手盖缺陷检测与实例分割系统**
+
+</div>
 
 ---
 
+## 📋 项目概述
 
-<div align="center">
-  <a href="http://www.shihuahuang.cn">Shihua Huang</a><sup>1*</sup>,&nbsp;&nbsp;
-  Yongjie Hou<sup>1,2*</sup>,&nbsp;&nbsp;
-  Longfei Liu<sup>1*</sup>,&nbsp;&nbsp;
-  <a href="https://xuanlong-yu.github.io/">Xuanlong Yu</a><sup>1</sup>,&nbsp;&nbsp;
-  <a href="https://xishen0220.github.io">Xi Shen</a><sup>1†</sup>&nbsp;&nbsp;
-</div>
+本项目是一个针对集装箱门把手盖表面缺陷检测和精确分割的深度学习解决方案。系统集成了目标检测与实例分割功能，能够精准识别和定位门把手盖上的缺陷，并提供像素级的分割掩模。项目采用Detectron2框架进行模型构建和评估，提供完整的训练、推理和部署工具。
 
-  
-<p align="center">
-<i>
-1. <a href="https://intellindust-ai-lab.github.io"> Intellindust AI Lab</a> &nbsp;&nbsp; 2. Xiamen University &nbsp; <br> 
-* Equal Contribution &nbsp;&nbsp; † Corresponding Author
-</i>
-</p>
+### 🎯 主要特性
 
+- **双任务支持**：同时支持目标检测和实例分割
+- **精确像素级分割**：提供缺陷区域的精确掩模输出
+- **Detectron2框架**：利用业界成熟的Detectron2框架，确保稳定性和拓展性
+- **灵活配置系统**：基于YAML的配置管理，支持快速定制
+- **完整的评估体系**：集成Detectron2评估工具，支持AP、mAP等多种指标
+- **多种模型支持**：支持多个骨干网络和检测头配置
+- **生产就绪**：包含完整的推理、部署和可视化工具
 
-<p align="center">
-<strong>If you like our work, please give us a ⭐!</strong>
-</p>
+---
 
+## 🚀 快速开始
 
-<p align="center">
-  <img src="./figures/deimv2_coco_AP_vs_Params.png" alt="Image 1" width="49%">
-  <img src="./figures/deimv2_coco_AP_vs_GFLOPs.png" alt="Image 2" width="49%">
-</p>
+### 环境要求
 
-</details>
+- Python 3.8 或更高版本
+- PyTorch 1.9+ 和 torchvision
+- CUDA 10.2+ (推荐用于GPU加速)
+- Detectron2 (将自动安装)
 
- 
-  
-## 🚀 Updates
-- [x] **\[2026.1.7\]** STA, introduced in DEIMv2, has been integrated into the SOTA distillation library [LightlyTrain](https://github.com/lightly-ai/lightly-train/blob/1fbe09744891727b4b494583ee62f35e7b7b1668/src/lightly_train/_task_models/dinov3_ltdetr_object_detection/dinov3_vit_wrapper.py#L15), demonstrating its practical value and impact in real-world training pipelines. 
-- [x] **\[2026.1.7\]** FP16 Inference Fix: **Use TensorRT ≥ 10.6 to ensure stable execution and correct detection results.** For detailed deployment instructions, please refer to [Deployment](https://github.com/Intellindust-AI-Lab/DEIMv2?tab=readme-ov-file#4-tools).
-- [x] **\[2025.11.3\]** [We have uploaded our models to Hugging Face](https://huggingface.co/Intellindust)! Thanks to NielsRogge!
-- [x] **\[2025.10.28\]** Optimized the attention module in ViT-Tiny, reducing memory usage by half for the S and M models.
-- [x] **\[2025.10.2\]** [DEIMv2 has been integrated into X-AnyLabeling!](https://github.com/Intellindust-AI-Lab/DEIMv2/issues/25#issue-3473960491) Many thanks to the X-AnyLabeling maintainers for making this possible.
-- [x] **\[2025.9.26\]** Release DEIMv2 series.
+### 安装步骤
 
-## 🧭 Table of Content
-* [1. 🤖 Model Zoo](#1-model-zoo)
-* [2. ⚡ Quick Start](#2-quick-start)
-* [3. 🛠️ Usage](#3-usage)
-* [4. 🧰 Tools](#4-tools)
-* [5. 📜 Citation](#5-citation)
-* [6. 🙏 Acknowledgement](#6-acknowledgement)
-* [7. ⭐ Star History](#7-star-history)
-  
-  
-## 1. Model Zoo
+1. **创建Conda环境（推荐）**
 
-| Model | Dataset | AP | #Params | GFLOPs | Latency (ms) | config | Hugging Face | checkpoint | log |
-| :---: | :---: | :---: | :---: | :---: |:------------:| :---: | :---: | :---: | :---: |
-| **Atto** | COCO | **23.8** | 0.5M | 0.8 | 1.10 | [yml](./configs/deimv2/deimv2_hgnetv2_atto_coco.yml) | [huggingface](https://huggingface.co/Intellindust/DEIMv2_HGNetv2_ATTO_COCO) | [Google](https://drive.google.com/file/d/18sRJXX3FBUigmGJ1y5Oo_DPC5C3JCgYc/view?usp=sharing) / [Quark](https://pan.quark.cn/s/04c997582fca) | [Google](https://drive.google.com/file/d/1M7FLN8EeVHG02kegPN-Wxf_9BlkghZfj/view?usp=sharing) / [Quark](https://pan.quark.cn/s/7bf3548d3e10) |
-| **Femto** | COCO | **31.0** | 1.0M | 1.7 | 1.45 | [yml](./configs/deimv2/deimv2_hgnetv2_femto_coco.yml) | [huggingface](https://huggingface.co/Intellindust/DEIMv2_HGNetv2_FEMTO_COCO) | [Google](https://drive.google.com/file/d/16hh6l9Oln9TJng4V0_HNf_Z7uYb7feds/view?usp=sharing) / [Quark](https://pan.quark.cn/s/169f3cefec1b) | [Google](https://drive.google.com/file/d/1_KWVfOr3bB5TMHTNOmDIAO-tZJmKB9-b/view?usp=sharing) / [Quark](https://pan.quark.cn/s/9dd5c4940199) |
-| **Pico** | COCO | **38.5** | 1.5M | 5.2 | 2.13 | [yml](./configs/deimv2/deimv2_hgnetv2_pico_coco.yml) | [huggingface](https://huggingface.co/Intellindust/DEIMv2_HGNetv2_PICO_COCO) | [Google](https://drive.google.com/file/d/1PXpUxYSnQO-zJHtzrCPqQZ3KKatZwzFT/view?usp=sharing) / [Quark](https://pan.quark.cn/s/0db5b1dff721) | [Google](https://drive.google.com/file/d/1GwyWotYSKmFQdVN9k2MM6atogpbh0lo1/view?usp=sharing) / [Quark](https://pan.quark.cn/s/5ab2a74bb867) |
-| **N** | COCO | **43.0** | 3.6M | 6.8 | 2.32 | [yml](./configs/deimv2/deimv2_hgnetv2_n_coco.yml) | [huggingface](https://huggingface.co/Intellindust/DEIMv2_HGNetv2_N_COCO) | [Google](https://drive.google.com/file/d/1G_Q80EVO4T7LZVPfHwZ3sT65FX5egp9K/view?usp=sharing) / [Quark](https://pan.quark.cn/s/1f626f191d11) | [Google](https://drive.google.com/file/d/1QhYfRrUy8HrihD3OwOMJLC-ATr97GInV/view?usp=sharing) / [Quark](https://pan.quark.cn/s/54e5c89675b3) |
-| **S** | COCO | **50.9** | 9.7M | 25.6 | 5.78 | [yml](./configs/deimv2/deimv2_dinov3_s_coco.yml) | [huggingface](https://huggingface.co/Intellindust/DEIMv2_DINOv3_S_COCO) | [Google](https://drive.google.com/file/d/1MDOh8UXD39DNSew6rDzGFp1tAVpSGJdL/view?usp=sharing) / [Quark](https://pan.quark.cn/s/f4d05c349a24) | [Google](https://drive.google.com/file/d/1ydA4lWiTYusV1s3WHq5jSxIq39oxy-Nf/view?usp=sharing) / [Quark](https://pan.quark.cn/s/277660d785d2) |
-| **M** | COCO | **53.0** | 18.1M | 52.2 | 8.80 | [yml](./configs/deimv2/deimv2_dinov3_m_coco.yml) | [huggingface](https://huggingface.co/Intellindust/DEIMv2_DINOv3_M_COCO) | [Google](https://drive.google.com/file/d/1nPKDHrotusQ748O1cQXJfi5wdShq6bKp/view?usp=sharing) / [Quark](https://pan.quark.cn/s/68a719248756) | [Google](https://drive.google.com/file/d/1i05Q1-O9UH-2Vb52FpFJ4mBG523GUqJU/view?usp=sharing) / [Quark](https://pan.quark.cn/s/32af04f3e4b4) |
-| **L** | COCO | **56.0** | 32.2M | 96.7 | 10.47 | [yml](./configs/deimv2/deimv2_dinov3_l_coco.yml) | [huggingface](https://huggingface.co/Intellindust/DEIMv2_DINOv3_L_COCO) | [Google](https://drive.google.com/file/d/1dRJfVHr9HtpdvaHlnQP460yPVHynMray/view?usp=sharing) / [Quark](https://pan.quark.cn/s/966b7ef89bdf) | [Google](https://drive.google.com/file/d/13mrQxyrf1kJ45Yd692UQwdb7lpGoqsiS/view?usp=sharing) / [Quark](https://pan.quark.cn/s/182bd52562a7) |
-| **X** | COCO | **57.8** | 50.3M | 151.6 | 13.75 | [yml](./configs/deimv2/deimv2_dinov3_x_coco.yml) | [huggingface](https://huggingface.co/Intellindust/DEIMv2_DINOv3_X_COCO) | [Google](https://drive.google.com/file/d/1pTiQaBGt8hwtO0mbYlJ8nE-HGztGafS7/view?usp=sharing) / [Quark](https://pan.quark.cn/s/038aa966b283) | [Google](https://drive.google.com/file/d/13QV0SwJw1wHl0xHWflZj1KstBUAovSsV/view?usp=drive_link) / [Quark](https://pan.quark.cn/s/333aba42b4bb) |
-
-
-
-
-## 2. Quick start
-
-### 2.0 Using Models from Hugging Face
-
-We currently release our models on Hugging Face! Here's a simple example. You can see detailed configs and more examples in [hf_models.ipynb](./hf_models.ipynb).
-
-<details>
-<summary> Simple example </summary>
-
-Create a .py file in the directory of DEIMv2, make sure all components are loaded successfully.
-
-```shell
-import torch.nn as nn
-from huggingface_hub import PyTorchModelHubMixin
-
-from engine.backbone import HGNetv2, DINOv3STAs
-from engine.deim import HybridEncoder, LiteEncoder
-from engine.deim import DFINETransformer, DEIMTransformer
-from engine.deim.postprocessor import PostProcessor
-
-
-class DEIMv2(nn.Module, PyTorchModelHubMixin):
-    def __init__(self, config):
-        super().__init__()
-        self.backbone = DINOv3STAs(**config["DINOv3STAs"])
-        self.encoder = HybridEncoder(**config["HybridEncoder"])
-        self.decoder = DEIMTransformer(**config["DEIMTransformer"])
-        self.postprocessor = PostProcessor(**config["PostProcessor"])
-
-    def forward(self, x, orig_target_sizes):
-        x = self.backbone(x)
-        x = self.encoder(x)
-        x = self.decoder(x)
-        x = self.postprocessor(x, orig_target_sizes)
-
-        return x
-
-deimv2_s_config = {
-  "DINOv3STAs": {
-    ...
-  },
-  ...
-}
-
-deimv2_s_hf = DEIMv2.from_pretrained("Intellindust/DEIMv2_DINOv3_S_COCO")
-```
-</details>
-
-### 2.1 Environment Setup
-
-```shell
-# You can use PyTorch 2.5.1 or 2.4.1. We have not tried other versions, but we recommend that the PyTorch version be 2.0 or higher.
-
+```bash
 conda create -n deimv2 python=3.11 -y
 conda activate deimv2
+```
+
+2. **克隆项目并安装依赖**
+
+```bash
+cd "Container door handle catch"
 pip install -r requirements.txt
 ```
 
+> **注意**：Detectron2的安装可能需要一些时间。如果在Windows上安装遇到问题，请参考 [Detectron2官方安装指南](https://detectron2.readthedocs.io/en/latest/tutorials/install.html)。更多信息参见 [PyTorch官方教程](https://pytorch.org/)。
 
-### 2.2 Data Preparation
+3. **验证安装**
 
-<details open>
-<summary> 2.2.1 COCO2017 Dataset </summary>
+```bash
+python -c "import detectron2; print(detectron2.__version__)"
+python -c "import torch; print(torch.__version__)"
+```
 
-Follow the steps below to prepare COCO dataset:
+---
 
-1. Download COCO2017 from [OpenDataLab](https://opendatalab.com/OpenDataLab/COCO_2017) or [COCO](https://cocodataset.org/#download).
-2. Modify paths in [coco_detection.yml](./configs/dataset/coco_detection.yml)
+## 🎯 核心功能
 
-    ```yaml
-    train_dataloader:
-        img_folder: /data/COCO2017/train2017/
-        ann_file: /data/COCO2017/annotations/instances_train2017.json
-    val_dataloader:
-        img_folder: /data/COCO2017/val2017/
-        ann_file: /data/COCO2017/annotations/instances_val2017.json
-    ```
+### 目标检测 (Object Detection)
 
-</details>
+识别和定位门把手盖上缺陷的位置，输出边界框坐标和置信度。
+
+### 实例分割 (Instance Segmentation)
+
+在目标检测的基础上，为每个缺陷提供像素级的精确分割掩模。详见 [实例分割概念介绍](https://detectron2.readthedocs.io/en/latest/tutorials/models.html)。
+
+### Detectron2评估
+
+使用Detectron2内置的评估工具计算：
+- **AP (Average Precision)**：平均精度
+- **AP50, AP75**：不同IoU阈值下的精度
+- **mAP**：所有类别的平均精度
+- **AR (Average Recall)**：平均召回率
+- **Mask AP**：分割掩模的精度
+
+---
+
+## 📁 项目结构
+
+```
+Container door handle catch/
+├── train.py                 # 主训练脚本
+├── requirements.txt         # Python依赖（包含Detectron2）
+├── configs/                 # 配置文件目录
+│   ├── base/               # 基础配置（数据加载、优化器等）
+│   ├── dataset/            # 数据集配置
+│   ├── deim_dfine/         # 检测模型配置
+│   ├── deim_rtdetrv2/      # 替代检测模型配置
+│   └── deimv2/             # 替代检测模型配置
+├── engine/                 # 核心引擎代码
+│   ├── backbone/           # 神经网络骨干（ResNet、HGNetv2等）
+│   ├── core/               # 核心模块（配置、工作空间管理）
+│   ├── data/               # 数据加载与预处理
+│   ├── deim/               # 检测器实现
+│   ├── misc/               # 工具函数
+│   ├── optim/              # 优化器配置
+│   └── solver/             # 训练求解器
+├── tools/                  # 工具脚本集
+│   ├── inference/          # 推理脚本（检测+分割）
+│   ├── deployment/         # 部署工具
+│   ├── dataset/            # 数据集处理工具
+│   └── visualization/      # 结果可视化工具
+└── figures/                # 项目示例图片
+```
 
 
-<details>
-<summary>2.2.2 (Optional) Custom Dataset</summary>
+---
 
-To train on your custom dataset, you need to organize it in the COCO format. Follow the steps below to prepare your dataset:
+## 🏗️ 骨干网络准备
 
-1. **Set `remap_mscoco_category` to `False`:**
+### 自动下载的骨干网络
 
-    This prevents the automatic remapping of category IDs to match the MSCOCO categories.
+以下骨干网络将在训练时自动下载，无需手动操作：
 
-    ```yaml
-    remap_mscoco_category: False
-    ```
+- **HGNetv2系列**：HGNetv2-Nano, HGNetv2-Tiny, HGNetv2-Small, HGNetv2-Medium, HGNetv2-Large, HGNetv2-XLarge
+- **ResNet系列**：ResNet18, ResNet34, ResNet50, ResNet101
 
-2. **Organize Images:**
+### 需要手动下载的骨干网络
 
-    Structure your dataset directories as follows:
+#### DINOv3骨干网络（用于L和X模型）
 
-    ```shell
-    dataset/
-    ├── images/
-    │   ├── train/
-    │   │   ├── image1.jpg
-    │   │   ├── image2.jpg
-    │   │   └── ...
-    │   ├── val/
-    │   │   ├── image1.jpg
-    │   │   ├── image2.jpg
-    │   │   └── ...
-    └── annotations/
-        ├── instances_train.json
-        ├── instances_val.json
-        └── ...
-    ```
+如果使用DEIMv2-L或X模型，需要手动下载DINOv3-S和DINOv3-S+：
 
-    - **`images/train/`**: Contains all training images.
-    - **`images/val/`**: Contains all validation images.
-    - **`annotations/`**: Contains COCO-formatted annotation files.
+1. 参考 [DINOv3官方仓库](https://github.com/facebookresearch/dinov3) 的说明
+2. 下载以下权重文件：
+   - `dinov3_vits16.pth`：DINOv3-S
+   - `dinov3_vitb14.pth`：DINOv3-Base（可选）
 
-3. **Convert Annotations to COCO Format:**
+#### ViT-Tiny和ViT-Tiny+骨干网络（用于S和M模型）
 
-    If your annotations are not already in COCO format, you'll need to convert them. You can use the following Python script as a reference or utilize existing tools:
+如果使用DEIMv2-S或M模型，需要下载蒸馏的ViT-Tiny权重：
 
-    ```python
-    import json
+- [ViT-Tiny](https://drive.google.com/file/d/1YMTq_woOLjAcZnHSYNTsNg7f0ahj5LPs/view?usp=sharing)：`vitt_distill.pt`
+- [ViT-Tiny+](https://drive.google.com/file/d/1COHfjzq5KfnEaXTluVgEOMdhpuVcG6Jt/view?usp=sharing)：`vittplus_distill.pt`
 
-    def convert_to_coco(input_annotations, output_annotations):
-        # Implement conversion logic here
-        pass
+### 组织骨干网络文件
 
-    if __name__ == "__main__":
-        convert_to_coco('path/to/your_annotations.json', 'dataset/annotations/instances_train.json')
-    ```
+将下载的骨干网络权重文件放在项目的 `ckpts/` 目录中：
 
-4. **Update Configuration Files:**
-
-    Modify your [custom_detection.yml](./configs/dataset/custom_detection.yml).
-
-    ```yaml
-    task: detection
-
-    evaluator:
-      type: CocoEvaluator
-      iou_types: ['bbox', ]
-
-    num_classes: 777 # your dataset classes
-    remap_mscoco_category: False
-
-    train_dataloader:
-      type: DataLoader
-      dataset:
-        type: CocoDetection
-        img_folder: /data/yourdataset/train
-        ann_file: /data/yourdataset/train/train.json
-        return_masks: False
-        transforms:
-          type: Compose
-          ops: ~
-      shuffle: True
-      num_workers: 4
-      drop_last: True
-      collate_fn:
-        type: BatchImageCollateFunction
-
-    val_dataloader:
-      type: DataLoader
-      dataset:
-        type: CocoDetection
-        img_folder: /data/yourdataset/val
-        ann_file: /data/yourdataset/val/ann.json
-        return_masks: False
-        transforms:
-          type: Compose
-          ops: ~
-      shuffle: False
-      num_workers: 4
-      drop_last: False
-      collate_fn:
-        type: BatchImageCollateFunction
-    ```
-
-</details>
-
-### 2.3 Backbone Preparation
-
-- **Versions based on HGNetv2**: Backbones will be downloaded automatically during training, so you don't need to worry.
-
-- **DEIMv2-L and X**: We use DINOv3-S and S+ as backbone, you can download them following the guide in [DINOv3](https://github.com/facebookresearch/dinov3).
-
-- **DEIMv2-S and M**: We use our ViT-Tiny and ViT-Tiny+ distilled from DINOv3-S, you can download them from [ViT-Tiny](https://drive.google.com/file/d/1YMTq_woOLjAcZnHSYNTsNg7f0ahj5LPs/view?usp=sharing) and [ViT-Tiny+](https://drive.google.com/file/d/1COHfjzq5KfnEaXTluVGEOMdhpuVcG6Jt/view?usp=sharing).
-
-Place dinov3 and vits into ./ckpts folder as:
-
-```shell
+```
 ckpts/
 ├── dinov3_vits16.pth
+├── dinov3_vitb14.pth
 ├── vitt_distill.pt
 ├── vittplus_distill.pt
 └── ...
 ```
 
+在配置文件中指定骨干网络路径：
 
-## 3. Usage
-<details open>
-<summary> 3.1 COCO2017 </summary>
-
-1. Training
-    ```shell
-    # for ViT-based variants
-    CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --master_port=7777 --nproc_per_node=4 train.py -c configs/deimv2/deimv2_dinov3_${model}_coco.yml --use-amp --seed=0
-
-    # for HGNetv2-based variants
-    CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --master_port=7777 --nproc_per_node=4 train.py -c configs/deimv2/deimv2_hgnetv2_${model}_coco.yml --use-amp --seed=0
-    ```
-
-2. Testing
-    ```shell
-    # for ViT-based variants
-    CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --master_port=7777 --nproc_per_node=4 train.py -c configs/deimv2/deimv2_dinov3_${model}_coco.yml --test-only -r model.pth
-
-    # for HGNetv2-based variants
-    CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --master_port=7777 --nproc_per_node=4 train.py -c configs/deimv2/deimv2_hgnetv2_${model}_coco.yml --test-only -r model.pth
-    ```
-
-3. Tuning
-    ```shell
-    # for ViT-based variants
-    CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --master_port=7777 --nproc_per_node=4 train.py -c configs/deimv2/deimv2_dinov3_${model}_coco.yml --use-amp --seed=0 -t model.pth
-
-    # for HGNetv2-based variants
-    CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --master_port=7777 --nproc_per_node=4 train.py -c configs/deimv2/deimv2_hgnetv2_${model}_coco.yml --use-amp --seed=0 -t model.pth
-    ```
-</details>
-
-<details>
-<summary> 3.2 (Optional) Customizing Batch Size </summary>
-
-For example, if you want to use **DEIMv2-S** and  double the total batch size to 64 when training **DEIMv2** on COCO2017, here are the steps you should follow:
-
-1. **Modify your [deimv2_dinov3_s_coco.yml](./configs/deimv2/deimv2_dinov3_s_coco.yml)** to increase the `total_batch_size`:
-
-    ```yaml
-    train_dataloader:
-      total_batch_size: 64 
-      dataset: 
-        transforms:
-          ops:
-            ...
-    
-      collate_fn:
-        ...
-    ```
-
-2. **Modify your [deimv2_dinov3_s_coco.yml](./configs/deimv2/deimv2_dinov3_s_coco.yml)**. Here’s how the key parameters should be adjusted:
-
-    ```yaml
-    optimizer:
-      type: AdamW
-    
-      params: 
-        -
-          # except norm/bn/bias in self.dinov3
-          params: '^(?=.*.dinov3)(?!.*(?:norm|bn|bias)).*$'  
-          lr: 0.00005  # doubled, linear scaling law
-        -
-          # including all norm/bn/bias in self.dinov3
-          params: '^(?=.*.dinov3)(?=.*(?:norm|bn|bias)).*$'    
-          lr: 0.00005   # doubled, linear scaling law
-          weight_decay: 0.
-        - 
-          # including all norm/bn/bias except for the self.dinov3
-          params: '^(?=.*(?:sta|encoder|decoder))(?=.*(?:norm|bn|bias)).*$'
-          weight_decay: 0.
-    
-      lr: 0.0005   # linear scaling law if needed
-      betas: [0.9, 0.999]
-      weight_decay: 0.0001
-   
-    ema:  # added EMA settings
-      decay: 0.9998  # adjusted by 1 - (1 - decay) * 2
-      warmups: 500  # halved
-   
-    lr_warmup_scheduler:
-      warmup_duration: 250  # halved
-    ```
-
-</details>
-
-
-<details>
-<summary> 3.3 (Optional) Customizing Input Size </summary>
-
-If you'd like to train **DEIMv2-S** on COCO2017 with an input size of 320x320, follow these steps:
-
-1. **Modify your  [deimv2_dinov3_s_coco.yml](./configs/deimv2/deimv2_dinov3_s_coco.yml)**:
-
-    ```yaml
-    eval_spatial_size: [320, 320]
-   
-    train_dataloader:
-      # Here we set the total_batch_size to 64 as an example.
-      total_batch_size: 64 
-      dataset: 
-        transforms:
-          ops:
-            #  Especially for Mosaic augmentation, it is recommended that output_size = input_size / 2.
-            - {type: Mosaic, output_size: 160, rotation_range: 10, translation_range: [0.1, 0.1], scaling_range: [0.5, 1.5],
-               probability: 1.0, fill_value: 0, use_cache: True, max_cached_images: 50, random_pop: True}
-            ...
-            - {type: Resize, size: [320, 320], }
-            ...
-        collate_fn:
-          base_size: 320
-          ...
-
-    val_dataloader:
-      dataset:
-        transforms:
-          ops:
-            - {type: Resize, size: [320, 320], }
-            ...
-    ```
-   
-</details>
-
-<details>
-<summary> 3.4 (Optional) Customizing Epoch </summary>
-
-If you want to finetune **DEIMv2-S** for **20** epochs, follow these steps (for reference only; feel free to adjust them according to your needs):
-
-```yml
-epoches: 32 #  Total epochs: 20 for training + EMA  for 4n = 12. n refers to the model size in the matched config.
-
-flat_epoch: 14    # 4 + 20 // 2
-no_aug_epoch: 12  # 4n
-
-train_dataloader:
-  dataset: 
-    transforms:
-      ops:
-        ...
-      policy:
-        epoch: [4, 14, 20]   # [start_epoch, flat_epoch, epoches - no_aug_epoch]
-
-  collate_fn:
-    ...
-    mixup_epochs: [4, 14]  # [start_epoch, flat_epoch]
-    stop_epoch: 20  # epoches - no_aug_epoch
-    copyblend_epochs: [4, 20]  # [start_epoch, epoches - no_aug_epoch]
-  
-DEIMCriterion:
-  matcher:
-    ...
-    matcher_change_epoch: 18  # ~90% of (epoches - no_aug_epoch)
+```yaml
+backbone:
+  type: DINOv3STAs
+  model_name: vits
+  pretrained: true
+  ckpt_path: ./ckpts/dinov3_vits16.pth
 ```
 
-</details>
+### 预训练模型
 
-## 4. Tools
-<details>
-<summary> 4.1 Deployment </summary>
+在模型配置文件 [configs/deim_dfine/](configs/deim_dfine/) 和 [configs/deimv2/](configs/deimv2/) 中可以找到完整的模型配置。
 
-1. Setup
-    ```shell
-    pip install onnx onnxsim
-    ```
+---
 
-2. Export onnx
-    ```shell
-    python tools/deployment/export_onnx.py --check -c configs/deimv2/deimv2_dinov3_${model}_coco.yml -r model.pth
-    ```
+## ⚙️ 配置说明
 
-3. Export [tensorrt](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html)
-    ```shell
-    trtexec --onnx="model.onnx" --saveEngine="model.engine" --fp16
-    ```
+项目使用YAML格式的配置文件，主要参数如下：
 
-⚠️ **TensorRT Version Notes**
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `num_classes` | 检测类别数 | 1 |
+| `batch_size` | 训练批大小 | 4-32 |
+| `max_epochs` | 最大训练轮数 | 60 |
+| `lr` | 初始学习率 | 0.0001 |
+| `img_size` | 输入图像大小 | 640 |
+| `task` | 检测或分割 | detection/segmentation |
 
-- ✅ Recommended: **Use TensorRT ≥ 10.6 for FP16 inference** to ensure stable execution and correct detection results.
+### 多任务配置
 
-- ❗ Known Issue: With TensorRT 10.4, FP16 inference may produce incorrect outputs.
+```yaml
+# 配置为检测+分割任务
+model:
+  backbone: resnet50
+  roi_heads:
+    num_classes: 1
+    mask_on: true  # 启用分割掩模输出
+    
+# 评估配置
+test:
+  evaluator:
+    type: "detectron2"  # 使用Detectron2评估器
+    metrics: ["bbox", "segm"]  # 同时评估框和分割
+```
 
-- 🔧 Workarounds for older versions (e.g., 10.4):
+---
 
-  - Run inference in FP32 mode, or
+## 📊 数据准备
 
-  - Carefully validate the exported engine and end-to-end pipeline to confirm numerical correctness and detection performance.
+### 支持的数据格式
 
+- **COCO格式**：标准COCO数据集（同时包含检测框和分割掩模）
+- **自定义格式**：按照COCO格式自定义的数据集
 
-</details>
+### COCO2017数据集准备
 
-<details>
-<summary> 4.2 Inference (Visualization) </summary>
+1. **下载COCO2017数据集**
 
+从以下来源下载COCO2017数据集（选一个）：
+- [OpenDataLab](https://opendatalab.com/OpenDataLab/COCO_2017)
+- [COCO官方网站](https://cocodataset.org/#download)
 
-1. Setup
-    ```shell
-    pip install -r tools/inference/requirements.txt
-    ```
+2. **组织数据目录**
 
+下载完成后，将数据集组织如下：
 
-2. Inference (onnxruntime / tensorrt / torch)
+```
+/path/to/COCO2017/
+├── train2017/
+│   ├── 000000000009.jpg
+│   ├── 000000000025.jpg
+│   └── ...
+├── val2017/
+│   ├── 000000000139.jpg
+│   └── ...
+└── annotations/
+    ├── instances_train2017.json
+    ├── instances_val2017.json
+    └── ...
+```
 
-    Inference on images and videos is now supported.
+3. **更新配置文件**
 
-    ```shell
-    python tools/inference/onnx_inf.py --onnx model.onnx --input image.jpg  # video.mp4
-    python tools/inference/trt_inf.py --trt model.engine --input image.jpg
-    python tools/inference/torch_inf.py -c configs/deimv2/deimv2_dinov3_${model}_coco.yml -r model.pth --input image.jpg --device cuda:0
-    ```
-</details>
+修改 [configs/dataset/coco_detection.yml](configs/dataset/coco_detection.yml)，设置正确的数据路径：
 
-<details>
-<summary> 4.3 Benchmark </summary>
+```yaml
+train_dataloader:
+    img_folder: /path/to/COCO2017/train2017/
+    ann_file: /path/to/COCO2017/annotations/instances_train2017.json
+val_dataloader:
+    img_folder: /path/to/COCO2017/val2017/
+    ann_file: /path/to/COCO2017/annotations/instances_val2017.json
+```
 
-1. Setup
-    ```shell
-    pip install -r tools/benchmark/requirements.txt
-    ```
+### 自定义数据集准备
 
-2. Model FLOPs, MACs, and Params
-    ```shell
-    python tools/benchmark/get_info.py -c configs/deimv2/deimv2_dinov3_${model}_coco.yml
-    ```
+如果使用自定义数据集，需要按COCO格式组织：
 
-2. TensorRT Latency
-    ```shell
-    python tools/benchmark/trt_benchmark.py --COCO_dir path/to/COCO2017 --engine_dir model.engine
-    ```
-</details>
+1. **设置配置参数**
 
-<details>
-<summary> 4.4 Fiftyone Visualization  </summary>
+在配置文件中设置 `remap_mscoco_category: False` 以禁用类别ID自动映射：
 
-1. Setup
-    ```shell
-    pip install fiftyone
-    ```
-2. Voxel51 Fiftyone Visualization ([fiftyone](https://github.com/voxel51/fiftyone))
-    ```shell
-    python tools/visualization/fiftyone_vis.py -c configs/deimv2/deimv2_dinov3_${model}_coco.yml -r model.pth
-    ```
-</details>
+```yaml
+remap_mscoco_category: False
+```
 
-<details>
-<summary> 4.5 Others </summary>
+2. **组织数据目录**
 
-1. Auto Resume Training
-    ```shell
-    bash reference/safe_training.sh
-    ```
+```
+custom_dataset/
+├── images/
+│   ├── train/
+│   │   ├── image1.jpg
+│   │   ├── image2.jpg
+│   │   └── ...
+│   └── val/
+│       ├── image1.jpg
+│       └── ...
+└── annotations/
+    ├── instances_train.json
+    ├── instances_val.json
+    └── ...
+```
 
-2. Converting Model Weights
-    ```shell
-    python reference/convert_weight.py model.pth
-    ```
-</details>
+3. **注解格式**
 
+确保annotations文件遵循COCO格式：
 
-## 5. Citation
-If you use `DEIMv2` or its methods in your work, please cite the following BibTeX entries:
-
-```latex
-@article{huang2025deimv2,
-  title={Real-Time Object Detection Meets DINOv3},
-  author={Huang, Shihua and Hou, Yongjie and Liu, Longfei and Yu, Xuanlong and Shen, Xi},
-  journal={arXiv},
-  year={2025}
+```json
+{
+  "images": [
+    {"id": 1, "file_name": "image1.jpg", "height": 480, "width": 640},
+    {"id": 2, "file_name": "image2.jpg", "height": 480, "width": 640}
+  ],
+  "annotations": [
+    {
+      "id": 1,
+      "image_id": 1,
+      "category_id": 1,
+      "bbox": [x, y, width, height],
+      "area": 1234,
+      "segmentation": [[x1, y1, x2, y2, ...]],
+      "iscrowd": 0
+    }
+  ],
+  "categories": [
+    {"id": 1, "name": "缺陷"}
+  ]
 }
 ```
 
-## 6. Acknowledgement
-Our work is built upon [LightlyTrain](https://github.com/lightly-ai/lightly-train), [D-FINE](https://github.com/Peterande/D-FINE), [RT-DETR](https://github.com/lyuwenyu/RT-DETR), [DEIM](https://github.com/ShihuaHuang95/DEIM), and [DINOv3](https://github.com/facebookresearch/dinov3). Thanks for their great work!
+4. **更新配置文件**
 
-✨ Feel free to contribute and reach out if you have any questions! ✨
+修改 [configs/dataset/custom_detection.yml](configs/dataset/custom_detection.yml)：
 
-## 7. Star History
+```yaml
+task: detection
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Intellindust-AI-Lab/DEIMv2&type=Date)](https://www.star-history.com/#Intellindust-AI-Lab/DEIMv2&Date)
+evaluator:
+  type: Detectron2CocoEvaluator
+  iou_types: ['bbox', 'segm']  # 如果有分割掩模，包含'segm'
+
+num_classes: 1  # 你的数据集类别数
+remap_mscoco_category: False
+
+train_dataloader:
+  type: DataLoader
+  dataset:
+    type: CocoDetection
+    img_folder: /path/to/custom_dataset/images/train
+    ann_file: /path/to/custom_dataset/annotations/instances_train.json
+    return_masks: true
+  shuffle: True
+  num_workers: 4
+  batch_size: 16
+  drop_last: True
+
+val_dataloader:
+  type: DataLoader
+  dataset:
+    type: CocoDetection
+    img_folder: /path/to/custom_dataset/images/val
+    ann_file: /path/to/custom_dataset/annotations/instances_val.json
+    return_masks: true
+  shuffle: False
+  num_workers: 4
+  batch_size: 16
+  drop_last: False
+```
+
+
+
+---
+
+## 🎓 训练与评估
+
+### 基础训练
+
+```bash
+# 使用默认配置训练
+python train.py --config configs/deim_dfine/deim_hgnetv2_s_coco.yml
+
+# 指定输出目录和设备
+python train.py --config configs/deim_dfine/deim_hgnetv2_m_coco.yml \
+    --output-dir ./outputs/experiment_001 \
+    --device cuda:0
+```
+
+### 启用分割任务
+
+```bash
+# 训练检测+分割模型
+python train.py --config configs/deim_dfine/deim_hgnetv2_m_coco.yml \
+    --update model.roi_heads.mask_on=true \
+    --update task=instance_segmentation
+```
+
+### 微调预训练模型
+
+```bash
+# 加载预训练权重进行微调
+python train.py --config configs/deim_dfine/deim_hgnetv2_m_coco.yml \
+    --resume ./checkpoints/model_pretrained.pth \
+    --update max_epochs=20 \
+    --update lr=0.00005  # 使用更小的学习率
+```
+
+### Detectron2评估
+
+训练完成后，系统将自动使用Detectron2评估器进行评估：
+
+```bash
+# 评估验证集
+python -m detectron2.tools.train_net \
+    --config-file configs/deim_dfine/config.yaml \
+    --eval-only \
+    MODEL.WEIGHTS outputs/model_final.pth
+```
+
+**评估输出指标**：
+
+```
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.850
+Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.920
+Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.890
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.870
+
+Mask Average Precision  (mAP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.820
+```
+
+### 分布式训练
+
+```bash
+# 多GPU训练
+python -m torch.distributed.launch --nproc_per_node 4 \
+    train.py --config configs/deim_dfine/deim_hgnetv2_l_coco.yml \
+    --distributed
+```
+
+---
+
+## 📈 训练监控
+
+### TensorBoard可视化
+
+```bash
+# 启动TensorBoard（监控损失函数、精度等）
+tensorboard --logdir=outputs/logs --port=6006
+```
+
+访问 `http://localhost:6006` 查看：
+- 训练/验证损失曲线
+- 学习率调度
+- 精度和召回率指标
+- 分割掩模质量
+
+### 输出目录结构
+
+```
+outputs/
+├── model_final.pth         # 最终模型权重
+├── model_best.pth          # 最优验证模型
+├── log.txt                 # 训练日志
+├── metrics.json            # 评估指标
+└── events.out.tfevents     # TensorBoard事件
+```
+
+
+---
+
+## 🔍 推理与部署
+
+### 单张图像推理
+
+```bash
+# 检测+分割推理
+python tools/inference/predict.py \
+    --model-weights outputs/model_final.pth \
+    --input-image samples/defect_001.jpg \
+    --output-dir ./results \
+    --task instance_segmentation
+```
+
+### 批量推理
+
+```bash
+# 对整个文件夹进行推理
+python tools/inference/batch_predict.py \
+    --model-weights outputs/model_final.pth \
+    --input-dir test_images/ \
+    --output-dir ./results \
+    --visualize  # 保存可视化结果
+```
+
+### 推理输出
+
+```python
+# 输出包括：
+{
+    "detections": [
+        {
+            "bbox": [x1, y1, x2, y2],
+            "confidence": 0.95,
+            "category": "缺陷",
+            "segmentation": binary_mask  # 分割掩模
+        }
+    ],
+    "image_size": [H, W]
+}
+```
+
+### 模型导出
+
+```bash
+# 导出为ONNX格式（用于跨平台部署）
+python tools/deployment/export_onnx.py \
+    --model-weights outputs/model_final.pth \
+    --output-file model.onnx
+
+# 导出为TorchScript格式
+python tools/deployment/export_torchscript.py \
+    --model-weights outputs/model_final.pth \
+    --output-file model.pt
+```
+
+---
+
+## 🛠️ 可视化工具
+
+### 类别分析
+
+```bash
+# 生成类别分布图表
+python tools/visualization/plot_class_distribution.py \
+    --annotations data/annotations.json \
+    --output results/class_distribution.png
+```
+
+### 预测结果可视化
+
+```bash
+# 可视化检测和分割结果
+python tools/visualization/visualize_predictions.py \
+    --image-dir test_images/ \
+    --predictions results/predictions.json \
+    --output-dir results/visualized/
+```
+
+---
+
+## 📝 许可证
+
+本项目采用Apache 2.0许可证。
+
+---
+
+## ✨ 关键依赖
+
+| 库 | 用途 |
+|---|---|
+| **Detectron2** | 检测和分割框架 |
+| **PyTorch** | 深度学习框架 |
+| **torchvision** | 计算机视觉工具 |
+| **OpenCV** | 图像处理 |
+| **PyYAML** | 配置管理 |
+| **TensorBoard** | 训练监控可视化 |
+
+---
+
+## 🚀 快速参考
+
+### 常用命令
+
+```bash
+# 训练
+python train.py --config configs/deim_dfine/deim_hgnetv2_m_coco.yml
+
+# 评估
+python -m detectron2.tools.train_net --config-file config.yaml --eval-only MODEL.WEIGHTS model.pth
+
+# 推理
+python tools/inference/predict.py --model-weights model.pth --input-image image.jpg
+
+# 监控训练进度
+tensorboard --logdir=outputs/logs --port=6006
+```
+
+---
+
