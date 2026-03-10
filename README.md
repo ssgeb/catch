@@ -7,7 +7,7 @@
 ![Python](https://img.shields.io/badge/Python-3.8+-yellow)
 ![Framework](https://img.shields.io/badge/Framework-Detectron2-brightgreen)     
 
-**集装箱门把手盖缺陷检测与实例分割系统**
+**集装箱门把手盖缺陷检测与实例分割项目**
 
 </div>
 
