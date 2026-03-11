@@ -34,9 +34,32 @@ __all__ = [
 ]
 
 
+class _TorchOnlyRandomSampler(data.Sampler):
+    """Random sampler that avoids NumPy dependency by using Tensor.tolist()."""
+
+    def __init__(self, data_source, generator=None):
+        self.data_source = data_source
+        self.generator = generator
+
+    def __iter__(self):
+        n = len(self.data_source)
+        yield from torch.randperm(n, generator=self.generator).tolist()
+
+    def __len__(self):
+        return len(self.data_source)
+
+
 @register()
 class DataLoader(data.DataLoader):
     __inject__ = ['dataset', 'collate_fn']
+
+    def __init__(self, *args, **kwargs):
+        shuffle = kwargs.get('shuffle', False)
+        sampler = kwargs.get('sampler', None)
+        if shuffle and sampler is None:
+            kwargs['sampler'] = _TorchOnlyRandomSampler(kwargs['dataset'])
+            kwargs['shuffle'] = False
+        super().__init__(*args, **kwargs)
 
     def __repr__(self) -> str:
         format_string = self.__class__.__name__ + "("
@@ -377,4 +400,3 @@ class BatchImageCollateFunction(BaseCollateFunction):
                     tg['masks'] = masks
 
         return images, targets
-

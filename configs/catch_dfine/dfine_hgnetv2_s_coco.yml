@@ -1,5 +1,5 @@
 ﻿__include__: [
-  '../dataset/custom_instance_segmentation.yml',
+  '../dataset/custom_detection.yml',
   '../runtime.yml',
   '../base/dataloader.yml',
   '../base/optimizer.yml',

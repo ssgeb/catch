@@ -4,6 +4,7 @@
 ]
 
 output_dir: ./outputs/catch_hgnetv2_s_coco
+remap_mscoco_category: True
 
 optimizer:
   type: AdamW

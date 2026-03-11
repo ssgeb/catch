@@ -104,12 +104,26 @@ class HungarianMatcher(nn.Module):
             out_bbox = outputs["pred_boxes"][batch_idx]
             tgt_ids = targets[batch_idx]["labels"]
             tgt_bbox = targets[batch_idx]["boxes"]
+            num_classes = out_prob.shape[-1]
 
             if tgt_bbox.numel() == 0:
                 empty = out_bbox.new_zeros((num_queries, 0)).cpu()
                 cost_matrices.append(empty)
                 indices_pre.append((np.empty((0,), dtype=np.int64), np.empty((0,), dtype=np.int64)))
                 continue
+
+            if tgt_ids.numel() > 0:
+                invalid = (tgt_ids < 0) | (tgt_ids >= num_classes)
+                if invalid.any():
+                    bad_labels = torch.unique(tgt_ids[invalid]).detach().cpu().tolist()
+                    image_id = targets[batch_idx].get("image_id", None)
+                    if torch.is_tensor(image_id):
+                        image_id = image_id.detach().cpu().flatten().tolist()
+                    raise ValueError(
+                        f"Target label out of range for matcher: labels={bad_labels}, "
+                        f"valid=[0, {num_classes - 1}], image_id={image_id}. "
+                        "Check num_classes/remap_mscoco_category/category_id mapping."
+                    )
 
             if self.change_matcher and epoch >= self.matcher_change_epoch:
                 class_score = out_prob[:, tgt_ids]
