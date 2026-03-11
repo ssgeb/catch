@@ -1,1 +1,447 @@
-﻿# 集装箱门把手盖缺陷检测与分割项目  <div align="center">  ![Task](https://img.shields.io/badge/Task-Detection%20%26%20Segmentation-blue)   ![License](https://img.shields.io/badge/LICENSE-Apache%202.0-green) ![Python](https://img.shields.io/badge/Python-3.8+-yellow) ![Framework](https://img.shields.io/badge/Framework-Detectron2-brightgreen)       **集装箱门把手盖缺陷检测与实例分割项目**  </div>  ---  ## 📋 项目概述  本项目是一个针对集装箱门把手盖表面缺陷检测和精确分割的深度学习解决方案。系统集成 了目标检测与实例分割功能，能够精准识别和定位门把手盖上的缺陷，并提供像素级的分割掩模。项目采用RT-DETR和Detectron2框架进行模型构建和评估，提供完整的训练、推理和部署工具。 ### 🎯 主要特性  - **双任务支持**：同时支持目标检测和实例分割 - **精确像素级分割**：提供缺陷区域的精确掩模输出 - **Detectron2框架**：利用业界成熟的Detectron2框架，确保稳定性和拓展性 - **灵活配置系统**：基于YAML的配置管理，支持快速定制 - **完整的评估体系**：集成Detectron2评估工具，支持AP、mAP等多种指标 - **多种模型支持**：支持多个骨干网络和检测头配置 - **生产就绪**：包含完整的推理、部署和可视化工具  ---  ## 🚀 快速开始  ### 环境要求  - Python 3.8 或更高版本 - PyTorch 1.9+ 和 torchvision - CUDA 10.2+ (推荐用于GPU加速) - Detectron2 (将自动安装)  ### 安装步骤  1. **创建Conda环境（推荐）**  ```bash conda create -n catch python=3.11 -y conda activate catch ```  2. **克隆项目并安装依赖**  ```bash git clone git@github.com:facebookresearch/detectron2.git cd detectron2 pip install -e . pip install git+https://github.com/cocodataset/panopticapi.git pip install git+https://github.com/mcordts/cityscapesScripts.git pip install -r requirements.txt  ```  > **注意**：Detectron2的安装可能需要一些时间。如果在Windows上安装遇到问题，请参  考 [Detectron2官方安装指南](https://detectron2.readthedocs.io/en/latest/tutorials/install.html)。更多信息参见 [PyTorch官方教程](https://pytorch.org/)。          3. **验证安装**  ```bash python -c "import detectron2; print(detectron2.__version__)" python -c "import torch; print(torch.__version__)" ```  ---  ## 🎯 核心功能  ### 目标检测 (Object Detection)  识别和定位门把手盖上缺陷的位置，输出边界框坐标和置信度。  ### 实例分割 (Instance Segmentation)  在目标检测的基础上，为每个缺陷提供像素级的精确分割掩模。详见 [实例分割概念介绍]( https://detectron2.readthedocs.io/en/latest/tutorials/models.html)。             ### Detectron2评估  使用Detectron2内置的评估工具计算： - **AP (Average Precision)**：平均精度 - **AP50, AP75**：不同IoU阈值下的精度 - **mAP**：所有类别的平均精度 - **AR (Average Recall)**：平均召回率 - **Mask AP**：分割掩模的精度  ---  ## 📁 项目结构  ``` Container door handle catch/ ├── train.py                 # 主训练脚本 ├── requirements.txt         # Python依赖（包含Detectron2） ├── configs/                 # 配置文件目录 │   ├── base/               # 基础配置（数据加载、优化器等） │   ├── dataset/            # 数据集配置 │   ├── catch_dfine/         # 检测模型配置 │   ├── catch_rtdetrv2/      # 替代检测模型配置 │   └── catch/             # 替代检测模型配置 ├── engine/                 # 核心引擎代码 │   ├── backbone/           # 神经网络骨干（ResNet、HGNetv2等） │   ├── core/               # 核心模块（配置、工作空间管理） │   ├── data/               # 数据加载与预处理 │   ├── catch/               # 检测器实现 │   ├── misc/               # 工具函数 │   ├── optim/              # 优化器配置 │   └── solver/             # 训练求解器 ├── tools/                  # 工具脚本集 │   ├── inference/          # 推理脚本（检测+分割） │   ├── deployment/         # 部署工具 │   ├── dataset/            # 数据集处理工具 │   └── visualization/      # 结果可视化工具 └── figures/                # 项目示例图片 ```   ---  ## 🏗️ 骨干网络准备  ### 自动下载的骨干网络  以下骨干网络将在训练时自动下载，无需手动操作：  - **HGNetv2系列**：HGNetv2-Nano, HGNetv2-Tiny, HGNetv2-Small, HGNetv2-Medium, HG Netv2-Large, HGNetv2-XLarge                                                     - **ResNet系列**：ResNet18, ResNet34, ResNet50, ResNet101  ### 需要手动下载的骨干网络  #### DINOv3骨干网络（用于L和X模型）  如果使用catch-L或X模型，需要手动下载DINOv3-S和DINOv3-S+：  1. 参考 [DINOv3官方仓库](https://github.com/facebookresearch/dinov3) 的说明      2. 下载以下权重文件：    - `dinov3_vits16.pth`：DINOv3-S    - `dinov3_vitb14.pth`：DINOv3-Base（可选）  #### ViT-Tiny和ViT-Tiny+骨干网络（用于S和M模型）  如果使用catch-S或M模型，需要下载蒸馏的ViT-Tiny权重：  - [ViT-Tiny](https://drive.google.com/file/d/1YMTq_woOLjAcZnHSYNTsNg7f0ahj5LPs/v iew?usp=sharing)：`vitt_distill.pt`                                             - [ViT-Tiny+](https://drive.google.com/file/d/1COHfjzq5KfnEaXTluVgEOMdhpuVcG6Jt/ view?usp=sharing)：`vittplus_distill.pt`                                         ### 组织骨干网络文件  将下载的骨干网络权重文件放在项目的 `ckpts/` 目录中：  ``` ckpts/ ├── dinov3_vits16.pth ├── dinov3_vitb14.pth ├── vitt_distill.pt ├── vittplus_distill.pt └── ... ```  在配置文件中指定骨干网络路径：  ```yaml backbone:   type: DINOv3STAs   model_name: vits   pretrained: true   ckpt_path: ./ckpts/dinov3_vits16.pth ```  ### 预训练模型  在模型配置文件 [configs/catch_dfine/](configs/catch_dfine/) 和 [configs/catch/](c onfigs/catch/) 中可以找到完整的模型配置。                                       ---  ## ⚙️ 配置说明  项目使用YAML格式的配置文件，主要参数如下：  | 参数 | 说明 | 默认值 | |------|------|--------| | `num_classes` | 检测类别数 | 1 | | `batch_size` | 训练批大小 | 4-32 | | `max_epochs` | 最大训练轮数 | 60 | | `lr` | 初始学习率 | 0.0001 | | `img_size` | 输入图像大小 | 640 | | `task` | 检测或分割 | detection/segmentation |  ### 多任务配置  ```yaml # 配置为检测+分割任务 model:   backbone: resnet50   roi_heads:     num_classes: 1     mask_on: true  # 启用分割掩模输出  # 评估配置 test:   evaluator:     type: "detectron2"  # 使用Detectron2评估器     metrics: ["bbox", "segm"]  # 同时评估框和分割 ```  ---  ## 📊 数据准备  ### 支持的数据格式  - **COCO格式**：标准COCO数据集（同时包含检测框和分割掩模） - **自定义格式**：按照COCO格式自定义的数据集  ### COCO2017数据集准备  1. **下载COCO2017数据集**  从以下来源下载COCO2017数据集（选一个）： - [OpenDataLab](https://opendatalab.com/OpenDataLab/COCO_2017) - [COCO官方网站](https://cocodataset.org/#download)  2. **组织数据目录**  下载完成后，将数据集组织如下：  ``` /path/to/COCO2017/ ├── train2017/ │   ├── 000000000009.jpg │   ├── 000000000025.jpg │   └── ... ├── val2017/ │   ├── 000000000139.jpg │   └── ... └── annotations/     ├── instances_train2017.json     ├── instances_val2017.json     └── ... ```  3. **更新配置文件**  修改 [configs/dataset/coco_detection.yml](configs/dataset/coco_detection.yml)，  设置正确的数据路径：                                                             ```yaml train_dataloader:     img_folder: /path/to/COCO2017/train2017/     ann_file: /path/to/COCO2017/annotations/instances_train2017.json val_dataloader:     img_folder: /path/to/COCO2017/val2017/     ann_file: /path/to/COCO2017/annotations/instances_val2017.json ```  ### 自定义数据集准备  如果使用自定义数据集，需要按COCO格式组织：  1. **设置配置参数**  在配置文件中设置 `remap_mscoco_category: False` 以禁用类别ID自动映射：  ```yaml remap_mscoco_category: False ```  2. **组织数据目录**  ``` custom_dataset/ ├── images/ │   ├── train/ │   │   ├── image1.jpg │   │   ├── image2.jpg │   │   └── ... │   └── val/ │       ├── image1.jpg │       └── ... └── annotations/     ├── instances_train.json     ├── instances_val.json     └── ... ```  3. **注解格式**  确保annotations文件遵循COCO格式：  ```json {   "images": [     {"id": 1, "file_name": "image1.jpg", "height": 480, "width": 640},     {"id": 2, "file_name": "image2.jpg", "height": 480, "width": 640}   ],   "annotations": [     {       "id": 1,       "image_id": 1,       "category_id": 1,       "bbox": [x, y, width, height],       "area": 1234,       "segmentation": [[x1, y1, x2, y2, ...]],       "iscrowd": 0     }   ],   "categories": [     {"id": 1, "name": "缺陷"}   ] } ```  4. **更新配置文件**  修改 [configs/dataset/custom_detection.yml](configs/dataset/custom_detection.yml )：                                                                              ```yaml task: detection  evaluator:   type: Detectron2CocoEvaluator   iou_types: ['bbox', 'segm']  # 如果有分割掩模，包含'segm'  num_classes: 1  # 你的数据集类别数 remap_mscoco_category: False  train_dataloader:   type: DataLoader   dataset:     type: CocoDetection     img_folder: /path/to/custom_dataset/images/train     ann_file: /path/to/custom_dataset/annotations/instances_train.json     return_masks: true   shuffle: True   num_workers: 4   batch_size: 16   drop_last: True  val_dataloader:   type: DataLoader   dataset:     type: CocoDetection     img_folder: /path/to/custom_dataset/images/val     ann_file: /path/to/custom_dataset/annotations/instances_val.json     return_masks: true   shuffle: False   num_workers: 4   batch_size: 16   drop_last: False ```    ---  ## 🎓 训练与评估  ### 基础训练  ```bash # 使用默认配置训练 python train.py --config configs/catch_dfine/catch_hgnetv2_s_coco.yml  # 指定输出目录和设备 python train.py --config configs/catch_dfine/catch_hgnetv2_m_coco.yml \     --output-dir ./outputs/experiment_001 \     --device cuda:0 ```  ### 启用分割任务  ```bash # 训练检测+分割模型 python train.py --config configs/catch_dfine/catch_hgnetv2_m_coco.yml \     --update model.roi_heads.mask_on=true \     --update task=instance_segmentation ```  ### 微调预训练模型  ```bash # 加载预训练权重进行微调 python train.py --config configs/catch_dfine/catch_hgnetv2_m_coco.yml \     --resume ./checkpoints/model_pretrained.pth \     --update max_epochs=20 \     --update lr=0.00005  # 使用更小的学习率 ```  ### Detectron2评估  训练完成后，系统将自动使用Detectron2评估器进行评估：  ```bash # 评估验证集 python -m detectron2.tools.train_net \     --config-file configs/catch_dfine/config.yaml \     --eval-only \     MODEL.WEIGHTS outputs/model_final.pth ```  **评估输出指标**：  ``` Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.850   Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.920   Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.890   Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.870    Mask Average Precision  (mAP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0 .820                                                                            ```  ### 分布式训练  ```bash # 多GPU训练 python -m torch.distributed.launch --nproc_per_node 4 \     train.py --config configs/catch_dfine/catch_hgnetv2_l_coco.yml \     --distributed ```  ---  ## 📈 训练监控  ### TensorBoard可视化  ```bash # 启动TensorBoard（监控损失函数、精度等） tensorboard --logdir=outputs/logs --port=6006 ```  访问 `http://localhost:6006` 查看： - 训练/验证损失曲线 - 学习率调度 - 精度和召回率指标 - 分割掩模质量  ### 输出目录结构  ``` outputs/ ├── model_final.pth         # 最终模型权重 ├── model_best.pth          # 最优验证模型 ├── log.txt                 # 训练日志 ├── metrics.json            # 评估指标 └── events.out.tfevents     # TensorBoard事件 ```   ---  ## 🔍 推理与部署  ### 单张图像推理  ```bash # 检测+分割推理 python tools/inference/predict.py \     --model-weights outputs/model_final.pth \     --input-image samples/defect_001.jpg \     --output-dir ./results \     --task instance_segmentation ```  ### 批量推理  ```bash # 对整个文件夹进行推理 python tools/inference/batch_predict.py \     --model-weights outputs/model_final.pth \     --input-dir test_images/ \     --output-dir ./results \     --visualize  # 保存可视化结果 ```  ### 推理输出  ```python # 输出包括： {     "detections": [         {             "bbox": [x1, y1, x2, y2],             "confidence": 0.95,             "category": "缺陷",             "segmentation": binary_mask  # 分割掩模         }     ],     "image_size": [H, W] } ```  ### 模型导出  ```bash # 导出为ONNX格式（用于跨平台部署） python tools/deployment/export_onnx.py \     --model-weights outputs/model_final.pth \     --output-file model.onnx  # 导出为TorchScript格式 python tools/deployment/export_torchscript.py \     --model-weights outputs/model_final.pth \     --output-file model.pt ```  ---  ## 🛠️ 可视化工具  ### 类别分析  ```bash # 生成类别分布图表 python tools/visualization/plot_class_distribution.py \     --annotations data/annotations.json \     --output results/class_distribution.png ```  ### 预测结果可视化  ```bash # 可视化检测和分割结果 python tools/visualization/visualize_predictions.py \     --image-dir test_images/ \     --predictions results/predictions.json \     --output-dir results/visualized/ ```  ---  ## 📝 许可证  本项目采用Apache 2.0许可证。  ---  ## ✨ 关键依赖  | 库 | 用途 | |---|---| | **Detectron2** | 检测和分割框架 | | **PyTorch** | 深度学习框架 | | **torchvision** | 计算机视觉工具 | | **OpenCV** | 图像处理 | | **PyYAML** | 配置管理 | | **TensorBoard** | 训练监控可视化 |  ---  ## 🚀 快速参考  ### 常用命令  ```bash # 训练 python train.py --config configs/catch_dfine/catch_hgnetv2_m_coco.yml  # 评估 python -m detectron2.tools.train_net --config-file config.yaml --eval-only MODEL .WEIGHTS model.pth                                                               # 推理 python tools/inference/predict.py --model-weights model.pth --input-image image. jpg                                                                              # 监控训练进度 tensorboard --logdir=outputs/logs --port=6006 ```  ---
+﻿# 集装箱门把手盖缺陷检测与分割项目
+
+<div align="center">
+
+![Task](https://img.shields.io/badge/Task-Detection%20%26%20Segmentation-blue)
+![License](https://img.shields.io/badge/LICENSE-Apache%202.0-green)
+![Python](https://img.shields.io/badge/Python-3.8+-yellow)
+![Framework](https://img.shields.io/badge/Framework-Detectron2-brightgreen)
+
+**集装箱门把手盖缺陷检测与实例分割项目**
+
+</div>
+
+---
+
+## 项目概述
+
+本项目面向集装箱门把手盖表面缺陷检测与实例分割，提供训练、评估、推理和导出流程。项目结合 RT-DETR 风格检测头与 Detectron2 评估能力，可用于目标检测和像素级缺陷分割任务。
+
+### 主要特性
+
+- 同时支持目标检测和实例分割
+- 提供像素级分割掩模输出
+- 基于 YAML 的配置系统，便于快速调整
+- 集成 Detectron2 评估流程
+- 支持多种骨干网络和模型配置
+- 包含推理、导出和可视化脚本
+
+---
+
+## 快速开始
+
+### 环境要求
+
+- Python 3.8+
+- PyTorch 1.9+
+- torchvision
+- CUDA 10.2+（推荐 GPU 环境）
+- Detectron2
+
+### 安装步骤
+
+1. 创建 Conda 环境
+
+```bash
+conda create -n catch python=3.11 -y
+conda activate catch
+```
+
+2. 安装 Detectron2 与项目依赖
+
+```bash
+git clone git@github.com:facebookresearch/detectron2.git
+cd detectron2
+pip install -e .
+pip install git+https://github.com/cocodataset/panopticapi.git
+pip install git+https://github.com/mcordts/cityscapesScripts.git
+cd ..
+pip install -r requirements.txt
+```
+
+3. 验证安装
+
+```bash
+python -c "import detectron2; print(detectron2.__version__)"
+python -c "import torch; print(torch.__version__)"
+```
+
+> Detectron2 在 Windows 上安装时可能需要额外配置，可参考 [Detectron2 安装文档](https://detectron2.readthedocs.io/en/latest/tutorials/install.html)。
+
+---
+
+## 核心功能
+
+### 目标检测
+
+识别门把手盖上的缺陷位置，输出边界框与置信度。
+
+### 实例分割
+
+在检测基础上输出每个缺陷的像素级掩模。相关概念可参考 [Detectron2 模型文档](https://detectron2.readthedocs.io/en/latest/tutorials/models.html)。
+
+### 评估指标
+
+项目可使用 Detectron2 评估器统计以下指标：
+
+- AP
+- AP50 / AP75
+- mAP
+- AR
+- Mask AP
+
+---
+
+## 项目结构
+
+```text
+Container door handle catch/
+├── train.py
+├── requirements.txt
+├── configs/
+│   ├── base/
+│   ├── dataset/
+│   ├── catch_dfine/
+│   ├── catch_rtdetrv2/
+│   └── catchv2/
+├── engine/
+│   ├── backbone/
+│   ├── catch/
+│   ├── core/
+│   ├── data/
+│   ├── misc/
+│   ├── optim/
+│   └── solver/
+├── tools/
+│   ├── benchmark/
+│   ├── dataset/
+│   ├── deployment/
+│   ├── inference/
+│   ├── reference/
+│   └── visualization/
+└── figures/
+```
+
+---
+
+## 骨干网络准备
+
+### 自动下载
+
+以下骨干网络通常可在训练时自动下载：
+
+- HGNetv2 系列
+- ResNet 系列
+
+### 需要手动下载
+
+#### DINOv3 骨干网络
+
+如果使用 `catchv2-L` 或 `catchv2-X`，需要手动准备 DINOv3 权重：
+
+- `dinov3_vits16.pth`
+- `dinov3_vitb14.pth`（可选）
+
+参考仓库：[facebookresearch/dinov3](https://github.com/facebookresearch/dinov3)
+
+#### ViT-Tiny 权重
+
+如果使用 `catchv2-S` 或 `catchv2-M`，需要准备蒸馏版 ViT-Tiny 权重：
+
+- [ViT-Tiny](https://drive.google.com/file/d/1YMTq_woOLjAcZnHSYNTsNg7f0ahj5LPs/view?usp=sharing)
+- [ViT-Tiny+](https://drive.google.com/file/d/1COHfjzq5KfnEaXTluVgEOMdhpuVcG6Jt/view?usp=sharing)
+
+### 权重目录示例
+
+```text
+ckpts/
+├── dinov3_vits16.pth
+├── dinov3_vitb14.pth
+├── vitt_distill.pt
+└── vittplus_distill.pt
+```
+
+配置示例：
+
+```yaml
+backbone:
+  type: DINOv3STAs
+  model_name: vits
+  pretrained: true
+  ckpt_path: ./ckpts/dinov3_vits16.pth
+```
+
+### 模型配置位置
+
+完整模型配置可在以下目录中查看：
+
+- `configs/catch_dfine/`
+- `configs/catchv2/`
+- `configs/catch_rtdetrv2/`
+
+---
+
+## 配置说明
+
+常用参数如下：
+
+| 参数 | 说明 | 默认值 |
+| --- | --- | --- |
+| `num_classes` | 检测类别数 | `1` |
+| `batch_size` | 训练批大小 | `4-32` |
+| `max_epochs` | 最大训练轮数 | `60` |
+| `lr` | 初始学习率 | `0.0001` |
+| `img_size` | 输入图像大小 | `640` |
+| `task` | 任务类型 | `detection` / `segmentation` |
+
+多任务配置示例：
+
+```yaml
+model:
+  backbone: resnet50
+  roi_heads:
+    num_classes: 1
+    mask_on: true
+
+test:
+  evaluator:
+    type: detectron2
+    metrics: ["bbox", "segm"]
+```
+
+---
+
+## 数据准备
+
+### 支持格式
+
+- COCO 格式
+- 按 COCO 组织的自定义数据集
+
+### COCO2017 目录示例
+
+```text
+/path/to/COCO2017/
+├── train2017/
+├── val2017/
+└── annotations/
+    ├── instances_train2017.json
+    └── instances_val2017.json
+```
+
+配置示例：
+
+```yaml
+train_dataloader:
+  img_folder: /path/to/COCO2017/train2017/
+  ann_file: /path/to/COCO2017/annotations/instances_train2017.json
+
+val_dataloader:
+  img_folder: /path/to/COCO2017/val2017/
+  ann_file: /path/to/COCO2017/annotations/instances_val2017.json
+```
+
+### 自定义数据集
+
+如果使用自定义数据集，建议按 COCO 结构组织：
+
+```text
+custom_dataset/
+├── images/
+│   ├── train/
+│   └── val/
+└── annotations/
+    ├── instances_train.json
+    └── instances_val.json
+```
+
+常用配置示例：
+
+```yaml
+task: detection
+
+evaluator:
+  type: Detectron2CocoEvaluator
+  iou_types: ["bbox", "segm"]
+
+num_classes: 1
+remap_mscoco_category: False
+
+train_dataloader:
+  type: DataLoader
+  dataset:
+    type: CocoDetection
+    img_folder: /path/to/custom_dataset/images/train
+    ann_file: /path/to/custom_dataset/annotations/instances_train.json
+    return_masks: true
+
+val_dataloader:
+  type: DataLoader
+  dataset:
+    type: CocoDetection
+    img_folder: /path/to/custom_dataset/images/val
+    ann_file: /path/to/custom_dataset/annotations/instances_val.json
+    return_masks: true
+```
+
+---
+
+## 训练与评估
+
+### 基础训练
+
+```bash
+python train.py --config configs/catch_dfine/catch_hgnetv2_s_coco.yml
+
+python train.py --config configs/catch_dfine/catch_hgnetv2_m_coco.yml \
+  --output-dir ./outputs/experiment_001 \
+  --device cuda:0
+```
+
+### 启用分割任务
+
+```bash
+python train.py --config configs/catch_dfine/catch_hgnetv2_m_coco.yml \
+  --update model.roi_heads.mask_on=true \
+  --update task=instance_segmentation
+```
+
+### 微调预训练模型
+
+```bash
+python train.py --config configs/catch_dfine/catch_hgnetv2_m_coco.yml \
+  --resume ./checkpoints/model_pretrained.pth \
+  --update max_epochs=20 \
+  --update lr=0.00005
+```
+
+### 评估
+
+```bash
+python -m detectron2.tools.train_net \
+  --config-file configs/catch_dfine/config.yaml \
+  --eval-only \
+  MODEL.WEIGHTS outputs/model_final.pth
+```
+
+示例输出：
+
+```text
+Average Precision  (AP) @[ IoU=0.50:0.95 | area=all | maxDets=100 ] = 0.850
+Average Precision  (AP) @[ IoU=0.50      | area=all | maxDets=100 ] = 0.920
+Average Precision  (AP) @[ IoU=0.75      | area=all | maxDets=100 ] = 0.890
+Average Recall     (AR) @[ IoU=0.50:0.95 | area=all | maxDets=100 ] = 0.870
+Mask Average Precision (mAP) = 0.820
+```
+
+### 分布式训练
+
+```bash
+python -m torch.distributed.launch --nproc_per_node 4 \
+  train.py --config configs/catch_dfine/catch_hgnetv2_l_coco.yml \
+  --distributed
+```
+
+---
+
+## 训练监控
+
+### TensorBoard
+
+```bash
+tensorboard --logdir=outputs/logs --port=6006
+```
+
+### 输出目录示例
+
+```text
+outputs/
+├── model_final.pth
+├── model_best.pth
+├── log.txt
+├── metrics.json
+└── events.out.tfevents
+```
+
+---
+
+## 推理与导出
+
+### PyTorch 推理
+
+```bash
+python tools/inference/torch_inf.py
+python tools/inference/torch_inf_vis.py
+```
+
+### ONNX 推理
+
+```bash
+python tools/inference/onnx_inf.py
+```
+
+### TensorRT 推理
+
+```bash
+python tools/inference/trt_inf.py
+```
+
+### OpenVINO 推理
+
+```bash
+python tools/inference/openvino_inf.py
+```
+
+### 模型导出
+
+```bash
+python tools/deployment/export_onnx.py
+python tools/deployment/export_yolo_w_nms.py
+```
+
+---
+
+## 可视化
+
+当前仓库中的可视化脚本位于：
+
+```bash
+python tools/visualization/fiftyone_vis.py
+```
+
+---
+
+## 关键依赖
+
+| 库 | 用途 |
+| --- | --- |
+| Detectron2 | 检测和分割框架 |
+| PyTorch | 深度学习框架 |
+| torchvision | 计算机视觉工具 |
+| OpenCV | 图像处理 |
+| PyYAML | 配置管理 |
+| TensorBoard | 训练监控 |
+
+---
+
+## 快速参考
+
+```bash
+# 训练
+python train.py --config configs/catch_dfine/catch_hgnetv2_m_coco.yml
+
+# 推理
+python tools/inference/torch_inf.py
+
+# 导出
+python tools/deployment/export_onnx.py
+
+# 训练监控
+tensorboard --logdir=outputs/logs --port=6006
+```
+
+---
+
+## 许可证
+
+本项目采用 Apache 2.0 许可证。
