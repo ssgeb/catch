@@ -1,6 +1,6 @@
-"""
-DEIM: DETR with Improved Matching for Fast Convergence
-Copyright (c) 2024 The DEIM Authors. All Rights Reserved.
+﻿"""
+catch: DETR with Improved Matching for Fast Convergence
+Copyright (c) 2024 The catch Authors. All Rights Reserved.
 ---------------------------------------------------------------------------------
 Modified from D-FINE (https://github.com/Peterande/D-FINE)
 Copyright (c) 2024 D-FINE authors. All Rights Reserved.
@@ -199,3 +199,4 @@ class DetSolver(BaseSolver):
             dist_utils.save_on_master(coco_evaluator.coco_eval["bbox"].eval, self.output_dir / "eval.pth")
 
         return
+

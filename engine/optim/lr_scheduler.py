@@ -1,6 +1,6 @@
-"""
-DEIM: DETR with Improved Matching for Fast Convergence
-Copyright (c) 2024 The DEIM Authors. All Rights Reserved.
+﻿"""
+catch: DETR with Improved Matching for Fast Convergence
+Copyright (c) 2024 The catch Authors. All Rights Reserved.
 """
 
 import math
@@ -71,3 +71,4 @@ class FlatCosineLRScheduler:
         for i, group in enumerate(optimizer.param_groups):
             group["lr"] = self.lr_func(current_iter, self.base_lrs[i], self.min_lrs[i])
         return optimizer
+

@@ -1,6 +1,6 @@
-"""
-DEIM: DETR with Improved Matching for Fast Convergence
-Copyright (c) 2024 The DEIM Authors. All Rights Reserved.
+﻿"""
+catch: DETR with Improved Matching for Fast Convergence
+Copyright (c) 2024 The catch Authors. All Rights Reserved.
 ---------------------------------------------------------------------------------
 Modified from D-FINE (https://github.com/Peterande/D-FINE)
 Copyright (c) 2024 D-FINE authors. All Rights Reserved.
@@ -124,3 +124,4 @@ class Compose(T.Compose):
         self.global_samples += 1
 
         return sample
+

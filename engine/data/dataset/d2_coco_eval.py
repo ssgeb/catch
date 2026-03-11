@@ -1,5 +1,5 @@
-"""
-Detectron2-based COCO evaluator wrapper with DEIMv2 evaluator interface.
+﻿"""
+Detectron2-based COCO evaluator wrapper with catchv2 evaluator interface.
 """
 
 import copy
@@ -20,7 +20,7 @@ __all__ = ["Detectron2CocoEvaluator"]
 class Detectron2CocoEvaluator(object):
     """
     A lightweight wrapper that reuses detectron2 COCO evaluation logic while
-    keeping the same methods used by DEIMv2 training/eval pipeline.
+    keeping the same methods used by catchv2 training/eval pipeline.
     """
 
     def __init__(self, coco_gt, iou_types, use_fast_impl=True, max_dets_per_image=None):
@@ -65,7 +65,7 @@ class Detectron2CocoEvaluator(object):
             if "use_fast_impl" in supported_params:
                 eval_kwargs["use_fast_impl"] = self.use_fast_impl
             elif "cocoeval_fn" in supported_params:
-                # DEIMv2 initializes faster_coco_eval as pycocotools, which breaks
+                # catchv2 initializes faster_coco_eval as pycocotools, which breaks
                 # detectron2's COCOeval_opt fast path. Force the compatible eval API.
                 eval_kwargs["cocoeval_fn"] = COCOeval
             if "img_ids" in supported_params:
@@ -228,3 +228,4 @@ def _normalize_max_dets_per_image(max_dets_per_image):
     if isinstance(max_dets_per_image, tuple):
         return list(max_dets_per_image)
     return max_dets_per_image
+

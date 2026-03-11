@@ -1,6 +1,6 @@
-"""
-DEIMv2: Real-Time Object Detection Meets DINOv3
-Copyright (c) 2025 The DEIMv2 Authors. All Rights Reserved.
+﻿"""
+catchv2: Real-Time Object Detection Meets DINOv3
+Copyright (c) 2025 The catchv2 Authors. All Rights Reserved.
 ---------------------------------------------------------------------------------
 Modified from D-FINE (https://github.com/Peterande/D-FINEr)
 
@@ -593,11 +593,11 @@ class HGNetv2(nn.Module):
     @staticmethod
     def load_partial_state_dict(model, state_dict):
         model_dict = model.state_dict()
-        # 只保留shape完全一致的参数
+        # 鍙繚鐣檚hape瀹屽叏涓€鑷寸殑鍙傛暟
         filtered_dict = {k: v for k, v in state_dict.items()
                         if k in model_dict and v.shape == model_dict[k].shape}
 
-        # 更新模型参数
+        # 鏇存柊妯″瀷鍙傛暟
         model_dict.update(filtered_dict)
         model.load_state_dict(model_dict, strict=False)
         missing = set(model_dict.keys()) - set(filtered_dict.keys())
@@ -628,3 +628,4 @@ class HGNetv2(nn.Module):
             if idx in self.return_idx:
                 outs.append(x)
         return outs
+

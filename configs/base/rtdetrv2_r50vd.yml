@@ -1,14 +1,14 @@
-task: detection
+﻿task: detection
 
-model: DEIM
-criterion: DEIMCriterion
+model: catch
+criterion: catchCriterion
 postprocessor: PostProcessor
 
 use_focal_loss: True
 eval_spatial_size: [640, 640] # h w
 checkpoint_freq: 4    # save freq
 
-DEIM: 
+catch: 
   backbone: PResNet
   encoder: HybridEncoder
   decoder: RTDETRTransformerv2
@@ -76,7 +76,7 @@ RTDETRTransformerv2:
 PostProcessor:
   num_top_queries: 300
 
-DEIMCriterion:
+catchCriterion:
   weight_dict: {loss_vfl: 1, loss_bbox: 5, loss_giou: 2,}
   losses: ['vfl', 'boxes', ]
   alpha: 0.75

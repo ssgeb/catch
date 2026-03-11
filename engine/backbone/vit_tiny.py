@@ -1,6 +1,6 @@
-"""
-DEIMv2: Real-Time Object Detection Meets DINOv3
-Copyright (c) 2025 The DEIMv2 Authors. All Rights Reserved.
+﻿"""
+catchv2: Real-Time Object Detection Meets DINOv3
+Copyright (c) 2025 The catchv2 Authors. All Rights Reserved.
 ---------------------------------------------------------------------------------
 Modified from DINOv3 (https://github.com/facebookresearch/dinov3)
 Modified from https://huggingface.co/spaces/Hila/RobustViT/blob/main/ViT/ViT_new.py
@@ -299,3 +299,4 @@ class VisionTransformer(nn.Module):
             if i in self.return_layers:
                 outs.append((x[:, 1:], x[:, 0]))
         return outs
+

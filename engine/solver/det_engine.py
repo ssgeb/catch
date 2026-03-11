@@ -1,6 +1,6 @@
-"""
-DEIM: DETR with Improved Matching for Fast Convergence
-Copyright (c) 2024 The DEIM Authors. All Rights Reserved.
+﻿"""
+catch: DETR with Improved Matching for Fast Convergence
+Copyright (c) 2024 The catch Authors. All Rights Reserved.
 ---------------------------------------------------------------------------------
 Modified from DETR (https://github.com/facebookresearch/detr/blob/main/engine.py)
 Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
@@ -179,3 +179,4 @@ def evaluate(model: torch.nn.Module, criterion: torch.nn.Module, postprocessor, 
                 stats['coco_eval_masks'] = segm_eval.stats.tolist()
 
     return stats, coco_evaluator
+

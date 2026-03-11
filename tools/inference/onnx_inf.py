@@ -1,6 +1,6 @@
-"""
-DEIMv2: Real-Time Object Detection Meets DINOv3
-Copyright (c) 2025 The DEIMv2 Authors. All Rights Reserved.
+﻿"""
+catchv2: Real-Time Object Detection Meets DINOv3
+Copyright (c) 2025 The catchv2 Authors. All Rights Reserved.
 ---------------------------------------------------------------------------------
 Modified from D-FINE (https://github.com/Peterande/D-FINE)
 Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
@@ -173,3 +173,4 @@ if __name__ == '__main__':
                         help='Model size')
     args = parser.parse_args()
     main(args)
+

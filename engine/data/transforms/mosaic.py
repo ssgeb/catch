@@ -1,6 +1,6 @@
-"""
-DEIM: DETR with Improved Matching for Fast Convergence
-Copyright (c) 2024 The DEIM Authors. All Rights Reserved.
+﻿"""
+catch: DETR with Improved Matching for Fast Convergence
+Copyright (c) 2024 The catch Authors. All Rights Reserved.
 """
 
 import torch
@@ -166,3 +166,4 @@ class Mosaic(T.Transform):
         mosaic_image, mosaic_target = self.affine_transform(mosaic_image, mosaic_target)
 
         return mosaic_image, mosaic_target, dataset
+

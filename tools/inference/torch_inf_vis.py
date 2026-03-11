@@ -1,6 +1,6 @@
-"""
-DEIMv2: Real-Time Object Detection Meets DINOv3
-Copyright (c) 2025 The DEIMv2 Authors. All Rights Reserved.
+﻿"""
+catchv2: Real-Time Object Detection Meets DINOv3
+Copyright (c) 2025 The catchv2 Authors. All Rights Reserved.
 ---------------------------------------------------------------------------------
 Modified from D-FINE (https://github.com/Peterande/D-FINE)
 Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
@@ -91,12 +91,11 @@ def process_dataset(model, dataset_path, output_path, thrh=0.5, size=(640, 640),
         w, h = im_pil.size
         orig_size = torch.tensor([[w, h]]).cuda()
 
-        # 图像预处理
-        im_data = transforms(im_pil).unsqueeze(0).cuda()
+        # 鍥惧儚棰勫鐞?        im_data = transforms(im_pil).unsqueeze(0).cuda()
         output = model(im_data, orig_size)
         labels, boxes, scores = output[0]['labels'], output[0]['boxes'], output[0]['scores']
 
-        # 绘制结果
+        # 缁樺埗缁撴灉
         vis_image = draw(im_pil.copy(), labels, boxes, scores, thrh)
         save_path = os.path.join(output_path, f"vis_{os.path.basename(file_path)}")
         vis_image.save(save_path)
@@ -153,3 +152,4 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', type=str, required=True, help="Path to save visualized results")
     args = parser.parse_args()
     main(args)
+
